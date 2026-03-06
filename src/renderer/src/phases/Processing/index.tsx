@@ -104,7 +104,23 @@ export function Complete() {
 }
 
 export function ErrorScreen() {
-  const { errorMessage, reset, setPhase } = usePdfStore()
+  const { errorMessage, reset, setPhase, loadedPdf, groups } = usePdfStore()
+
+  // Determine the most useful "Try Again" destination based on what state exists.
+  // If no PDF is loaded yet the error was during file loading — go back to drop zone.
+  // If a PDF is loaded but no groups, go back to page selection.
+  // Otherwise go back to output config to retry the split.
+  const retryPhase = !loadedPdf
+    ? 'drop'
+    : groups.some((g) => g.pageIndices.length > 0)
+    ? 'configuring'
+    : 'selecting'
+
+  const retryLabel = retryPhase === 'drop'
+    ? 'Try Another File'
+    : retryPhase === 'selecting'
+    ? 'Back to Pages'
+    : 'Try Again'
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 px-8">
@@ -125,7 +141,7 @@ export function ErrorScreen() {
         </p>
         <div className="flex items-center justify-center gap-4">
           <Button variant="secondary" onClick={reset}>Start Over</Button>
-          <Button variant="primary" onClick={() => setPhase('configuring')}>Try Again</Button>
+          <Button variant="primary" onClick={() => setPhase(retryPhase)}>{retryLabel}</Button>
         </div>
       </motion.div>
     </div>

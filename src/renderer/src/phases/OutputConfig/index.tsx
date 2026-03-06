@@ -77,9 +77,9 @@ export function OutputConfig() {
       }
     })
 
+    let unsubscribe: (() => void) | null = null
     try {
-      // Listen to progress
-      const unsubscribe = window.electronAPI.onSplitProgress((evt) => {
+      unsubscribe = window.electronAPI.onSplitProgress((evt) => {
         setProcessingProgress(evt.current, evt.total)
       })
 
@@ -87,8 +87,6 @@ export function OutputConfig() {
         sourcePath: loadedPdf.filePath,
         groups: splitGroups
       })
-
-      unsubscribe()
 
       if (result.success) {
         setOutputFilePaths(result.outputPaths)
@@ -99,13 +97,19 @@ export function OutputConfig() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to split PDF')
     } finally {
+      unsubscribe?.()
       setIsProcessing(false)
     }
   }
 
   const canStart = saveDirectory.length > 0 && activeGroups.length > 0
 
-  if (!loadedPdf) return null
+  // If we land here with no PDF loaded (e.g. error before load completed),
+  // redirect to drop zone rather than rendering a blank screen.
+  if (!loadedPdf) {
+    setPhase('drop')
+    return null
+  }
 
   return (
     <div className="flex flex-col h-screen bg-slate-900">
