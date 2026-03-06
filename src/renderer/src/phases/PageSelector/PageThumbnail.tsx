@@ -33,12 +33,6 @@ export const PageThumbnail = memo(function PageThumbnail({
     ctx.drawImage(bitmap, 0, 0)
   }, [bitmap])
 
-  const borderColor = isSelected
-    ? '#6366f1'
-    : group
-    ? group.color
-    : 'transparent'
-
   const borderWidth = isSelected || group ? 2 : 1
 
   return (
@@ -87,16 +81,21 @@ export const PageThumbnail = memo(function PageThumbnail({
           </div>
         )}
 
-        {/* Canvas or placeholder */}
-        <div className="w-[120px] h-[160px] flex items-center justify-center">
+        {/* Canvas or placeholder — fixed container, canvas fills it naturally */}
+        <div className="w-[120px] h-[160px] flex items-center justify-center bg-slate-800">
           {bitmap ? (
             <canvas
               ref={canvasRef}
-              className="w-full h-full object-contain"
-              style={{ imageRendering: 'crisp-edges' }}
+              style={{
+                display: 'block',
+                maxWidth: '100%',
+                maxHeight: '100%',
+                width: 'auto',
+                height: 'auto'
+              }}
             />
           ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
               <div className="w-8 h-10 rounded-sm bg-slate-700 animate-pulse" />
               <div className="w-6 h-1 rounded bg-slate-700 animate-pulse" />
             </div>

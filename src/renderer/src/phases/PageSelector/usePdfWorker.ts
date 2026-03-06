@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 
 type WorkerOutMessage =
   | { type: 'READY'; pageCount: number }
-  | { type: 'PAGE_RENDERED'; pageIndex: number; bitmap: ImageBitmap }
+  | { type: 'PAGE_RENDERED'; pageIndex: number; bitmap: ImageBitmap; naturalWidth: number; naturalHeight: number }
   | { type: 'ERROR'; error: string }
 
 interface UsePdfWorkerOptions {
@@ -16,7 +16,6 @@ export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerO
   const [workerReady, setWorkerReady] = useState(false)
   const callbacksRef = useRef({ onReady, onPageRendered, onError })
 
-  // Keep callbacks ref up to date without restarting worker
   useEffect(() => {
     callbacksRef.current = { onReady, onPageRendered, onError }
   }, [onReady, onPageRendered, onError])
@@ -35,16 +34,17 @@ export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerO
       } else if (msg.type === 'PAGE_RENDERED') {
         callbacksRef.current.onPageRendered?.(msg.pageIndex, msg.bitmap)
       } else if (msg.type === 'ERROR') {
+        console.error('[pdf-worker]', msg.error)
         callbacksRef.current.onError?.(msg.error)
       }
     }
 
     worker.onerror = (e) => {
+      console.error('[pdf-worker] onerror', e.message, e)
       callbacksRef.current.onError?.(e.message)
     }
 
     workerRef.current = worker
-
     return () => {
       worker.terminate()
       workerRef.current = null
@@ -56,9 +56,8 @@ export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerO
     workerRef.current?.postMessage({ type: 'INIT', pdfData }, [pdfData])
   }, [])
 
-  const renderPage = useCallback((pageIndex: number, scale: number) => {
-    if (!workerRef.current) return
-    workerRef.current.postMessage({ type: 'RENDER_PAGE', pageIndex, scale })
+  const renderPage = useCallback((pageIndex: number, targetWidth: number, targetHeight: number) => {
+    workerRef.current?.postMessage({ type: 'RENDER_PAGE', pageIndex, targetWidth, targetHeight })
   }, [])
 
   return { workerReady, initWorker, renderPage }

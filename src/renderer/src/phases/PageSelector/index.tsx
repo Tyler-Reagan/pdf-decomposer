@@ -6,8 +6,9 @@ import { GroupPanel } from './GroupPanel'
 import { FloatingActionBar } from './FloatingActionBar'
 import { Button } from '../../components/Button'
 
-const THUMB_SCALE = 0.22
 const CARD_WIDTH = 138
+const THUMB_W = 120 // target render pixels — worker computes scale to fit
+const THUMB_H = 160
 
 export function PageSelector() {
   const {
@@ -69,7 +70,7 @@ export function PageSelector() {
           if (idx < 0) continue
           if (entry.isIntersecting && !renderRequestedRef.current.has(idx)) {
             renderRequestedRef.current.add(idx)
-            renderPage(idx, THUMB_SCALE)
+            renderPage(idx, THUMB_W, THUMB_H)
           }
         }
       },
