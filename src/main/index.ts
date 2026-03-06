@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, nativeTheme } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpcHandlers } from './ipc'
@@ -41,6 +41,9 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+// Force dark theme so native OS dialogs (file/folder pickers) use dark styling
+nativeTheme.themeSource = 'dark'
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.pdfdecomposer')
