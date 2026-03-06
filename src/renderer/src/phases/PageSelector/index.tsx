@@ -67,10 +67,8 @@ export function PageSelector() {
         setThumbBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
       }
     },
-    onPageError: (pageIndex, renderType) => {
-      if (renderType === 'thumb') {
-        setErrorPages((prev) => new Set(prev).add(pageIndex))
-      }
+    onPageError: (pageIndex) => {
+      setErrorPages((prev) => new Set(prev).add(pageIndex))
     }
   })
 
@@ -317,6 +315,7 @@ export function PageSelector() {
         <PagePreviewModal
           pageIndices={sortedSelected}
           bitmaps={previewBitmaps}
+          errorPages={errorPages}
           groups={groups}
           onClose={() => setShowPreview(false)}
           onRequestRender={handlePreviewRender}

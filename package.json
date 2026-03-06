@@ -9,7 +9,7 @@
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "typecheck": "tsc --noEmit",
-    "dev": "electron-vite dev",
+    "dev": "GTK_THEME=Adwaita:dark electron-vite dev",
     "build": "electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "dist": "electron-vite build && electron-builder",

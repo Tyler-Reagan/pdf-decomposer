@@ -6,7 +6,7 @@ import { indicesToRangeString, GROUP_COLORS } from '../../types/pdf'
 import { Button } from '../../components/Button'
 
 export function GroupPanel() {
-  const { groups, loadedPdf, addGroup, removeGroup, updateGroup } = usePdfStore()
+  const { groups, loadedPdf, addGroup, removeGroup, updateGroup, setSelectedPageIndices } = usePdfStore()
 
   const totalPages = loadedPdf?.totalPages ?? 0
   const assignedPages = new Set(groups.flatMap((g) => g.pageIndices))
@@ -34,6 +34,7 @@ export function GroupPanel() {
                 onRemove={() => removeGroup(group.id)}
                 onUpdateColor={(color) => updateGroup(group.id, { color })}
                 onUpdateName={(name) => updateGroup(group.id, { name })}
+                onSelectGroup={() => setSelectedPageIndices(new Set(group.pageIndices))}
               />
             </motion.div>
           ))}
@@ -84,9 +85,10 @@ interface GroupCardProps {
   onRemove: () => void
   onUpdateColor: (color: string) => void
   onUpdateName: (name: string) => void
+  onSelectGroup: () => void
 }
 
-function GroupCard({ group, onRemove, onUpdateColor, onUpdateName }: GroupCardProps) {
+function GroupCard({ group, onRemove, onUpdateColor, onUpdateName, onSelectGroup }: GroupCardProps) {
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(group.name)
@@ -121,8 +123,10 @@ function GroupCard({ group, onRemove, onUpdateColor, onUpdateName }: GroupCardPr
 
   return (
     <div
-      className="rounded-xl bg-slate-800/60 border border-slate-700/50 p-3"
+      className={`rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 cursor-pointer transition-colors hover:bg-slate-800${group.pageIndices.length === 0 ? ' opacity-60' : ''}`}
       style={{ borderLeftColor: group.color, borderLeftWidth: 3 }}
+      onClick={group.pageIndices.length > 0 ? onSelectGroup : undefined}
+      title={group.pageIndices.length > 0 ? 'Click to select these pages' : undefined}
     >
       <div className="flex items-center gap-2">
         {/* Color swatch */}
@@ -130,7 +134,7 @@ function GroupCard({ group, onRemove, onUpdateColor, onUpdateName }: GroupCardPr
           <button
             className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             style={{ backgroundColor: group.color }}
-            onClick={() => setShowColorPicker((v) => !v)}
+            onClick={(e) => { e.stopPropagation(); setShowColorPicker((v) => !v) }}
             title="Change color"
           />
           <AnimatePresence>
@@ -167,6 +171,7 @@ function GroupCard({ group, onRemove, onUpdateColor, onUpdateName }: GroupCardPr
             ref={nameInputRef}
             value={nameValue}
             onChange={(e) => setNameValue(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
             onBlur={commitName}
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitName()
@@ -186,7 +191,7 @@ function GroupCard({ group, onRemove, onUpdateColor, onUpdateName }: GroupCardPr
 
         {/* Remove */}
         <button
-          onClick={onRemove}
+          onClick={(e) => { e.stopPropagation(); onRemove() }}
           className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
           title="Remove group"
         >

@@ -5,6 +5,7 @@ import type { PageGroup } from '../../types/pdf'
 interface PagePreviewModalProps {
   pageIndices: number[]           // sorted list of pages to preview
   bitmaps: Map<number, ImageBitmap>
+  errorPages: Set<number>
   groups: PageGroup[]
   onClose: () => void
   onRequestRender: (pageIndex: number) => void
@@ -13,6 +14,7 @@ interface PagePreviewModalProps {
 export function PagePreviewModal({
   pageIndices,
   bitmaps,
+  errorPages,
   groups,
   onClose,
   onRequestRender
@@ -81,6 +83,7 @@ export function PagePreviewModal({
                     key={idx}
                     pageIndex={idx}
                     bitmap={bitmaps.get(idx) ?? null}
+                    hasError={errorPages.has(idx)}
                     group={group}
                     onVisible={() => onRequestRender(idx)}
                   />
@@ -97,11 +100,12 @@ export function PagePreviewModal({
 interface PreviewCardProps {
   pageIndex: number
   bitmap: ImageBitmap | null
+  hasError: boolean
   group: PageGroup | undefined
   onVisible: () => void
 }
 
-const PreviewCard = memo(function PreviewCard({ pageIndex, bitmap, group, onVisible }: PreviewCardProps) {
+const PreviewCard = memo(function PreviewCard({ pageIndex, bitmap, hasError, group, onVisible }: PreviewCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const requested = useRef(false)
@@ -149,6 +153,15 @@ const PreviewCard = memo(function PreviewCard({ pageIndex, bitmap, group, onVisi
               ref={canvasRef}
               style={{ display: 'block', maxWidth: '100%', maxHeight: 480, width: 'auto', height: 'auto' }}
             />
+          ) : hasError ? (
+            <div className="flex flex-col items-center gap-3 py-12 opacity-50">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="text-slate-500 text-xs">Failed to render</span>
+            </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-12">
               <motion.div
