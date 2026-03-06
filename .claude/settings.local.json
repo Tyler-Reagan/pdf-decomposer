@@ -19,7 +19,8 @@
       "Bash(npm install immer 2>&1 | tail -5)",
       "Bash(npx tsc --project tsconfig.web.json --noEmit 2>&1 | head -60)",
       "Bash(npx tsc --project tsconfig.node.json --noEmit 2>&1 | head -40)",
-      "Bash(git init && git add -A && git commit -m \"Initial implementation of PDF Decomposer\n\nFull Electron + React + TypeScript app with:\n- Drag-and-drop PDF loading\n- Visual page thumbnail grid with pdfjs Web Worker\n- Lasso + shift/ctrl multi-selection\n- Color-coded page groups\n- Output config with custom filenames\n- PDF splitting via pdf-lib\n- Animated completion screen\n- NSIS per-user installer + portable exe config\" 2>&1)"
+      "Bash(git init && git add -A && git commit -m \"Initial implementation of PDF Decomposer\n\nFull Electron + React + TypeScript app with:\n- Drag-and-drop PDF loading\n- Visual page thumbnail grid with pdfjs Web Worker\n- Lasso + shift/ctrl multi-selection\n- Color-coded page groups\n- Output config with custom filenames\n- PDF splitting via pdf-lib\n- Animated completion screen\n- NSIS per-user installer + portable exe config\" 2>&1)",
+      "Bash(git add .github/ && git commit -m \"Add GitHub Actions workflow for Windows build\")"
     ]
   }
 }
