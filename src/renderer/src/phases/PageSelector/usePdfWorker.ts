@@ -1,26 +1,28 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 
-type RenderType = 'thumb' | 'preview'
+export type RenderType = 'thumb' | 'preview'
 
 type WorkerOutMessage =
   | { type: 'READY'; pageCount: number }
   | { type: 'PAGE_RENDERED'; pageIndex: number; bitmap: ImageBitmap; renderType: RenderType }
+  | { type: 'PAGE_ERROR'; pageIndex: number; renderType: RenderType; error: string }
   | { type: 'ERROR'; error: string }
 
 interface UsePdfWorkerOptions {
   onReady?: (pageCount: number) => void
   onPageRendered?: (pageIndex: number, bitmap: ImageBitmap, renderType: RenderType) => void
+  onPageError?: (pageIndex: number, renderType: RenderType) => void
   onError?: (error: string) => void
 }
 
-export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerOptions) {
+export function usePdfWorker({ onReady, onPageRendered, onPageError, onError }: UsePdfWorkerOptions) {
   const workerRef = useRef<Worker | null>(null)
   const [workerReady, setWorkerReady] = useState(false)
-  const callbacksRef = useRef({ onReady, onPageRendered, onError })
+  const callbacksRef = useRef({ onReady, onPageRendered, onPageError, onError })
 
   useEffect(() => {
-    callbacksRef.current = { onReady, onPageRendered, onError }
-  }, [onReady, onPageRendered, onError])
+    callbacksRef.current = { onReady, onPageRendered, onPageError, onError }
+  }, [onReady, onPageRendered, onPageError, onError])
 
   useEffect(() => {
     const worker = new Worker(
@@ -35,6 +37,8 @@ export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerO
         callbacksRef.current.onReady?.(msg.pageCount)
       } else if (msg.type === 'PAGE_RENDERED') {
         callbacksRef.current.onPageRendered?.(msg.pageIndex, msg.bitmap, msg.renderType)
+      } else if (msg.type === 'PAGE_ERROR') {
+        callbacksRef.current.onPageError?.(msg.pageIndex, msg.renderType)
       } else if (msg.type === 'ERROR') {
         console.error('[pdf-worker]', msg.error)
         callbacksRef.current.onError?.(msg.error)
@@ -59,8 +63,12 @@ export function usePdfWorker({ onReady, onPageRendered, onError }: UsePdfWorkerO
   }, [])
 
   const renderPage = useCallback(
-    (pageIndex: number, targetWidth: number, targetHeight: number, renderType: RenderType = 'thumb') => {
-      workerRef.current?.postMessage({ type: 'RENDER_PAGE', pageIndex, targetWidth, targetHeight, renderType })
+    (
+      pageIndex: number,
+      renderType: RenderType,
+      options: { targetWidth: number; targetHeight: number } | { fixedScale: number }
+    ) => {
+      workerRef.current?.postMessage({ type: 'RENDER_PAGE', pageIndex, renderType, ...options })
     },
     []
   )

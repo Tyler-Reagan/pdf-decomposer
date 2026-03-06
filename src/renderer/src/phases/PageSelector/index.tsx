@@ -10,8 +10,6 @@ import { Button } from '../../components/Button'
 const CARD_WIDTH = 138
 const THUMB_W = 120
 const THUMB_H = 160
-const PREVIEW_W = 500
-const PREVIEW_H = 680
 
 export function PageSelector() {
   const {
@@ -27,6 +25,7 @@ export function PageSelector() {
 
   const [thumbBitmaps, setThumbBitmaps] = useState<Map<number, ImageBitmap>>(new Map())
   const [previewBitmaps, setPreviewBitmaps] = useState<Map<number, ImageBitmap>>(new Map())
+  const [errorPages, setErrorPages] = useState<Set<number>>(new Set())
   const [initialized, setInitialized] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
 
@@ -67,6 +66,11 @@ export function PageSelector() {
       } else {
         setThumbBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
       }
+    },
+    onPageError: (pageIndex, renderType) => {
+      if (renderType === 'thumb') {
+        setErrorPages((prev) => new Set(prev).add(pageIndex))
+      }
     }
   })
 
@@ -95,7 +99,7 @@ export function PageSelector() {
           if (idx < 0) continue
           if (entry.isIntersecting && !renderRequestedRef.current.has(idx)) {
             renderRequestedRef.current.add(idx)
-            renderPage(idx, THUMB_W, THUMB_H, 'thumb')
+            renderPage(idx, 'thumb', { targetWidth: THUMB_W, targetHeight: THUMB_H })
           }
         }
       },
@@ -116,7 +120,7 @@ export function PageSelector() {
   }, [])
 
   const handlePreviewRender = useCallback((pageIndex: number) => {
-    renderPage(pageIndex, PREVIEW_W, PREVIEW_H, 'preview')
+    renderPage(pageIndex, 'preview', { fixedScale: 1.5 })
   }, [renderPage])
 
   // Selection logic
@@ -276,6 +280,7 @@ export function PageSelector() {
                 key={i}
                 pageIndex={i}
                 bitmap={thumbBitmaps.get(i) ?? null}
+                hasError={errorPages.has(i)}
                 group={groups.find((g) => g.pageIndices.includes(i))}
                 isSelected={selectedPageIndices.has(i)}
                 onMouseDown={handleMouseDown}

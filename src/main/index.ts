@@ -5,10 +5,10 @@ import { registerIpcHandlers } from './ipc'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: 1440,
+    height: 960,
+    minWidth: 960,
+    minHeight: 640,
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#0f172a',

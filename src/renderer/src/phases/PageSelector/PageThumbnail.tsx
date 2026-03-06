@@ -5,6 +5,7 @@ import type { PageGroup } from '../../types/pdf'
 interface PageThumbnailProps {
   pageIndex: number
   bitmap: ImageBitmap | null
+  hasError: boolean
   group: PageGroup | undefined
   isSelected: boolean
   onMouseDown: (e: React.MouseEvent, index: number) => void
@@ -15,6 +16,7 @@ interface PageThumbnailProps {
 export const PageThumbnail = memo(function PageThumbnail({
   pageIndex,
   bitmap,
+  hasError,
   group,
   isSelected,
   onMouseDown,
@@ -94,6 +96,15 @@ export const PageThumbnail = memo(function PageThumbnail({
                 height: 'auto'
               }}
             />
+          ) : hasError ? (
+            <div className="flex flex-col items-center justify-center gap-2 w-full h-full opacity-50">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="text-slate-500 text-[10px]">Failed</span>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
               <div className="w-8 h-10 rounded-sm bg-slate-700 animate-pulse" />
