@@ -66,7 +66,7 @@ export function DropZone() {
   )
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

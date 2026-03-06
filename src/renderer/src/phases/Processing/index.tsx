@@ -7,7 +7,7 @@ export function Processing() {
   const { processingProgress, processingCurrent, processingTotal } = usePdfStore()
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -51,7 +51,7 @@ export function Complete() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -123,7 +123,7 @@ export function ErrorScreen() {
     : 'Try Again'
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

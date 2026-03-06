@@ -9,7 +9,7 @@ export function App() {
   const phase = usePdfStore((s) => s.phase)
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-slate-900 text-white">
+    <div className="h-screen flex flex-col overflow-hidden bg-slate-900 text-white ring-1 ring-white/[0.06]">
       {/* Draggable title bar — must match titleBarOverlay height in main/index.ts */}
       <div
         className="flex-shrink-0 w-full"
@@ -57,7 +57,7 @@ export function App() {
 function PhaseWrapper({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      className="h-full w-full absolute inset-0"
+      className="h-full w-full absolute inset-0 overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

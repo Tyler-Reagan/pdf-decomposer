@@ -222,7 +222,7 @@ export function PageSelector() {
   const totalPages = loadedPdf.totalPages
 
   return (
-    <div className="flex h-screen bg-slate-900 select-none">
+    <div className="flex h-full bg-slate-900 select-none">
       {/* Left: Page grid */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
