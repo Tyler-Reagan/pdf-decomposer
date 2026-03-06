@@ -5,9 +5,10 @@ import { Button } from '../../components/Button'
 interface FloatingActionBarProps {
   visible: boolean
   onAddGroup: () => void
+  onPreview: () => void
 }
 
-export function FloatingActionBar({ visible, onAddGroup }: FloatingActionBarProps) {
+export function FloatingActionBar({ visible, onAddGroup, onPreview }: FloatingActionBarProps) {
   const { selectedPageIndices, groups, assignPagesToGroup, clearSelection } = usePdfStore()
   const selected = [...selectedPageIndices]
 
@@ -23,8 +24,23 @@ export function FloatingActionBar({ visible, onAddGroup }: FloatingActionBarProp
         >
           <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-2xl px-4 py-3 shadow-2xl">
             <span className="text-slate-400 text-sm font-medium whitespace-nowrap">
-              {selected.length} selected — Assign to:
+              {selected.length} selected —
             </span>
+
+            {/* Preview */}
+            <button
+              onClick={onPreview}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors text-sm font-medium text-slate-200"
+              title="Preview selected pages"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Preview
+            </button>
+
+            <span className="text-slate-600 text-sm">Assign to:</span>
 
             {/* Existing groups */}
             {groups.map((group) => (

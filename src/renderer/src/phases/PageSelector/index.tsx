@@ -4,11 +4,14 @@ import { usePdfWorker } from './usePdfWorker'
 import { PageThumbnail } from './PageThumbnail'
 import { GroupPanel } from './GroupPanel'
 import { FloatingActionBar } from './FloatingActionBar'
+import { PagePreviewModal } from './PagePreviewModal'
 import { Button } from '../../components/Button'
 
 const CARD_WIDTH = 138
-const THUMB_W = 120 // target render pixels — worker computes scale to fit
+const THUMB_W = 120
 const THUMB_H = 160
+const PREVIEW_W = 500
+const PREVIEW_H = 680
 
 export function PageSelector() {
   const {
@@ -22,32 +25,52 @@ export function PageSelector() {
     setPhase
   } = usePdfStore()
 
-  const [bitmaps, setBitmaps] = useState<Map<number, ImageBitmap>>(new Map())
+  const [thumbBitmaps, setThumbBitmaps] = useState<Map<number, ImageBitmap>>(new Map())
+  const [previewBitmaps, setPreviewBitmaps] = useState<Map<number, ImageBitmap>>(new Map())
   const [initialized, setInitialized] = useState(false)
+  const [showPreview, setShowPreview] = useState(false)
 
-  // Lasso — coords stored in scroll-content space so they stay aligned when scrolled
+  // Lasso state — coords in scroll-content space
   const [lasso, setLasso] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
   const lassoOriginRef = useRef<{ x: number; y: number } | null>(null)
   const isDraggingLasso = useRef(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
-  // IntersectionObserver for lazy loading
+  // Stable ref callbacks — one per page index, created once, no ref churn on re-render
+  const stableCardRefCallbacks = useRef<Map<number, (el: HTMLDivElement | null) => void>>(new Map())
+  const getCardRef = useCallback((pageIndex: number) => {
+    if (!stableCardRefCallbacks.current.has(pageIndex)) {
+      stableCardRefCallbacks.current.set(pageIndex, (el: HTMLDivElement | null) => {
+        if (el) {
+          cardRefs.current.set(pageIndex, el)
+          observerRef.current?.observe(el)
+        } else {
+          const old = cardRefs.current.get(pageIndex)
+          if (old) observerRef.current?.unobserve(old)
+          cardRefs.current.delete(pageIndex)
+          stableCardRefCallbacks.current.delete(pageIndex)
+        }
+      })
+    }
+    return stableCardRefCallbacks.current.get(pageIndex)!
+  }, [])
+
   const observerRef = useRef<IntersectionObserver | null>(null)
   const renderRequestedRef = useRef<Set<number>>(new Set())
 
   const { initWorker, renderPage } = usePdfWorker({
     onReady: () => setInitialized(true),
-    onPageRendered: (pageIndex, bitmap) => {
-      setBitmaps((prev) => {
-        const next = new Map(prev)
-        next.set(pageIndex, bitmap)
-        return next
-      })
+    onPageRendered: (pageIndex, bitmap, renderType) => {
+      if (renderType === 'preview') {
+        setPreviewBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
+      } else {
+        setThumbBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
+      }
     }
   })
 
-  // Initialize worker with PDF data
+  // Initialize worker
   useEffect(() => {
     if (!loadedPdf) return
     let cancelled = false
@@ -59,9 +82,11 @@ export function PageSelector() {
     return () => { cancelled = true }
   }, [loadedPdf, initWorker])
 
-  // Set up IntersectionObserver
+  // Set up IntersectionObserver rooted at the scroll container so it fires
+  // correctly as the user scrolls within the overflow div (not just the viewport)
   useEffect(() => {
-    if (!initialized) return
+    if (!initialized || !scrollContainerRef.current) return
+
     observerRef.current = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -70,27 +95,31 @@ export function PageSelector() {
           if (idx < 0) continue
           if (entry.isIntersecting && !renderRequestedRef.current.has(idx)) {
             renderRequestedRef.current.add(idx)
-            renderPage(idx, THUMB_W, THUMB_H)
+            renderPage(idx, THUMB_W, THUMB_H, 'thumb')
           }
         }
       },
-      { threshold: 0.1, rootMargin: '200px' }
+      {
+        root: scrollContainerRef.current,   // ← key fix: observe within the div
+        threshold: 0.1,
+        rootMargin: '200px'
+      }
     )
+
     for (const [, el] of cardRefs.current) observerRef.current.observe(el)
     return () => observerRef.current?.disconnect()
   }, [initialized, renderPage])
 
-  const setCardRef = useCallback((pageIndex: number) => (el: HTMLDivElement | null) => {
-    if (el) {
-      cardRefs.current.set(pageIndex, el)
-      observerRef.current?.observe(el)
-    } else {
-      const old = cardRefs.current.get(pageIndex)
-      if (old) observerRef.current?.unobserve(old)
-      cardRefs.current.delete(pageIndex)
-    }
+  // Preview: request high-res renders for selected pages
+  const handleOpenPreview = useCallback(() => {
+    setShowPreview(true)
   }, [])
 
+  const handlePreviewRender = useCallback((pageIndex: number) => {
+    renderPage(pageIndex, PREVIEW_W, PREVIEW_H, 'preview')
+  }, [renderPage])
+
+  // Selection logic
   const lastClickIndexRef = useRef<number | null>(null)
 
   const handleMouseDown = useCallback((e: React.MouseEvent, pageIndex: number) => {
@@ -114,7 +143,6 @@ export function PageSelector() {
       return
     }
 
-    // Record lasso origin in scroll-content space
     const el = scrollContainerRef.current
     if (!el) return
     const rect = el.getBoundingClientRect()
@@ -142,8 +170,6 @@ export function PageSelector() {
     const el = scrollContainerRef.current
     if (!el) return
     const rect = el.getBoundingClientRect()
-
-    // Current mouse in scroll-content space
     const curX = e.clientX - rect.left + el.scrollLeft
     const curY = e.clientY - rect.top + el.scrollTop
     const ox = lassoOriginRef.current.x
@@ -160,15 +186,12 @@ export function PageSelector() {
       const h = Math.abs(curY - oy)
       setLasso({ x, y, w, h })
 
-      // Test intersection — convert card viewport coords to content space for comparison
       const selected = new Set<number>()
       for (const [idx, cardEl] of cardRefs.current) {
         const cr = cardEl.getBoundingClientRect()
         const cardL = cr.left - rect.left + el.scrollLeft
         const cardT = cr.top - rect.top + el.scrollTop
-        const cardR = cardL + cr.width
-        const cardB = cardT + cr.height
-        if (cardL < x + w && cardR > x && cardT < y + h && cardB > y) {
+        if (cardL < x + w && cardL + cr.width > x && cardT < y + h && cardT + cr.height > y) {
           selected.add(idx)
         }
       }
@@ -193,10 +216,11 @@ export function PageSelector() {
   if (!loadedPdf) return null
 
   const totalPages = loadedPdf.totalPages
+  const sortedSelected = [...selectedPageIndices].sort((a, b) => a - b)
 
   return (
     <div className="flex h-full bg-slate-900 select-none">
-      {/* Left: Page grid column — relative so FloatingActionBar anchors to it */}
+      {/* Left: Page grid column */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Header */}
         <div className="flex items-center px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
@@ -235,7 +259,7 @@ export function PageSelector() {
           Click to select · Shift+click to extend · Ctrl+click to toggle · Drag to lasso
         </div>
 
-        {/* Scrollable grid — lasso rect positioned in its content space */}
+        {/* Scrollable grid */}
         <div
           ref={scrollContainerRef}
           className="relative flex-1 overflow-y-auto"
@@ -251,17 +275,17 @@ export function PageSelector() {
               <PageThumbnail
                 key={i}
                 pageIndex={i}
-                bitmap={bitmaps.get(i) ?? null}
+                bitmap={thumbBitmaps.get(i) ?? null}
                 group={groups.find((g) => g.pageIndices.includes(i))}
                 isSelected={selectedPageIndices.has(i)}
                 onMouseDown={handleMouseDown}
                 onMouseEnter={handleMouseEnter}
-                observerRef={setCardRef(i)}
+                observerRef={getCardRef(i)}
               />
             ))}
           </div>
 
-          {/* Lasso — absolute within scroll container, coords in content space */}
+          {/* Lasso */}
           {lasso && (
             <div
               className="absolute pointer-events-none border border-indigo-400 bg-indigo-500/10 z-20"
@@ -270,10 +294,11 @@ export function PageSelector() {
           )}
         </div>
 
-        {/* FloatingActionBar — outside the scroll container, anchored to left panel bottom */}
+        {/* Floating action bar — anchored to left panel, not scroll container */}
         <FloatingActionBar
           visible={selectedPageIndices.size > 0}
           onAddGroup={handleAddGroupWithSelection}
+          onPreview={handleOpenPreview}
         />
       </div>
 
@@ -281,6 +306,17 @@ export function PageSelector() {
       <div className="w-72 flex-shrink-0 border-l border-slate-700/60 bg-slate-900/80">
         <GroupPanel />
       </div>
+
+      {/* Preview modal */}
+      {showPreview && (
+        <PagePreviewModal
+          pageIndices={sortedSelected}
+          bitmaps={previewBitmaps}
+          groups={groups}
+          onClose={() => setShowPreview(false)}
+          onRequestRender={handlePreviewRender}
+        />
+      )}
     </div>
   )
 }
