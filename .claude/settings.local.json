@@ -21,7 +21,9 @@
       "Bash(npx tsc --project tsconfig.node.json --noEmit 2>&1 | head -40)",
       "Bash(git init && git add -A && git commit -m \"Initial implementation of PDF Decomposer\n\nFull Electron + React + TypeScript app with:\n- Drag-and-drop PDF loading\n- Visual page thumbnail grid with pdfjs Web Worker\n- Lasso + shift/ctrl multi-selection\n- Color-coded page groups\n- Output config with custom filenames\n- PDF splitting via pdf-lib\n- Animated completion screen\n- NSIS per-user installer + portable exe config\" 2>&1)",
       "Bash(git add .github/ && git commit -m \"Add GitHub Actions workflow for Windows build\")",
-      "Bash(git add .github/workflows/build.yml && git commit -m \"Fix: pass GH_TOKEN to build step for electron-builder CI detection\")"
+      "Bash(git add .github/workflows/build.yml && git commit -m \"Fix: pass GH_TOKEN to build step for electron-builder CI detection\")",
+      "Bash(git add electron-builder.yml && git commit -m \"Fix: set NSIS artifactName to match workflow upload glob\")",
+      "Bash(git push origin master 2>&1)"
     ]
   }
 }

@@ -1,5 +1,6 @@
 import { ipcMain, dialog, app } from 'electron'
 import * as fs from 'fs'
+import * as path from 'path'
 import { PDFDocument } from 'pdf-lib'
 import { splitPdf, SplitPdfParams } from '../utils/pdf-splitter'
 
@@ -40,6 +41,17 @@ export function registerPdfHandlers(): void {
     } catch (err) {
       throw new Error(`Failed to read file: ${err instanceof Error ? err.message : String(err)}`)
     }
+  })
+
+  // Store drag-dropped PDF bytes to a stable temp path and return it.
+  // Needed because files dragged from browsers/email clients live in an OS
+  // temp dir that gets deleted almost immediately after the drop event.
+  ipcMain.handle('store-pdf-data', async (_event, data: Buffer, originalName: string) => {
+    const dir = path.join(app.getPath('temp'), 'pdf-decomposer')
+    fs.mkdirSync(dir, { recursive: true })
+    const dest = path.join(dir, originalName)
+    fs.writeFileSync(dest, data)
+    return dest
   })
 
   // Split PDF

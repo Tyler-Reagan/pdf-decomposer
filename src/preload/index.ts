@@ -37,6 +37,9 @@ const api = {
   readPdfFile: (filePath: string): Promise<Buffer> =>
     ipcRenderer.invoke('read-pdf-file', filePath),
 
+  storePdfData: (data: Uint8Array, originalName: string): Promise<string> =>
+    ipcRenderer.invoke('store-pdf-data', Buffer.from(data), originalName),
+
   chooseSaveDirectory: (defaultPath?: string): Promise<string | null> =>
     ipcRenderer.invoke('choose-save-directory', defaultPath),
 

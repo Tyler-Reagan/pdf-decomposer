@@ -29,6 +29,7 @@ export interface ElectronAppAPI {
   openPdfDialog(): Promise<string | null>
   getPdfInfo(filePath: string): Promise<{ pageCount: number; fileSizeBytes: number }>
   readPdfFile(filePath: string): Promise<Buffer>
+  storePdfData(data: Uint8Array, originalName: string): Promise<string>
   chooseSaveDirectory(defaultPath?: string): Promise<string | null>
   splitPdf(params: SplitPdfParams): Promise<SplitPdfResult>
   openPath(pathToOpen: string): Promise<void>

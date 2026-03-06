@@ -46,9 +46,21 @@ export function DropZone() {
         setError('Please drop a PDF file')
         return
       }
-      // In Electron, dropped files have a path property
-      const filePath = (file as File & { path?: string }).path ?? file.name
-      await loadPdf(filePath)
+      // Read bytes immediately — files dragged from browsers/email clients
+      // live in an OS temp dir that can be deleted within milliseconds of drop.
+      // We copy to a stable temp path controlled by the app before proceeding.
+      setIsLoading(true)
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const stablePath = await window.electronAPI.storePdfData(
+          new Uint8Array(arrayBuffer),
+          file.name
+        )
+        await loadPdf(stablePath)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to read dropped file')
+        setIsLoading(false)
+      }
     },
     [loadPdf, setError]
   )
