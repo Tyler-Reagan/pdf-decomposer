@@ -9,39 +9,47 @@ export function App() {
   const phase = usePdfStore((s) => s.phase)
 
   return (
-    <div className="h-screen overflow-hidden bg-slate-900 text-white">
-      <AnimatePresence mode="wait">
-        {phase === 'drop' && (
-          <PhaseWrapper key="drop">
-            <DropZone />
-          </PhaseWrapper>
-        )}
-        {phase === 'selecting' && (
-          <PhaseWrapper key="selecting">
-            <PageSelector />
-          </PhaseWrapper>
-        )}
-        {phase === 'configuring' && (
-          <PhaseWrapper key="configuring">
-            <OutputConfig />
-          </PhaseWrapper>
-        )}
-        {phase === 'processing' && (
-          <PhaseWrapper key="processing">
-            <Processing />
-          </PhaseWrapper>
-        )}
-        {phase === 'complete' && (
-          <PhaseWrapper key="complete">
-            <Complete />
-          </PhaseWrapper>
-        )}
-        {phase === 'error' && (
-          <PhaseWrapper key="error">
-            <ErrorScreen />
-          </PhaseWrapper>
-        )}
-      </AnimatePresence>
+    <div className="h-screen flex flex-col overflow-hidden bg-slate-900 text-white">
+      {/* Draggable title bar — must match titleBarOverlay height in main/index.ts */}
+      <div
+        className="flex-shrink-0 w-full"
+        style={{ height: 38, WebkitAppRegion: 'drag' } as React.CSSProperties}
+      />
+      {/* Phase content fills remaining space */}
+      <div className="flex-1 relative overflow-hidden">
+        <AnimatePresence mode="wait">
+          {phase === 'drop' && (
+            <PhaseWrapper key="drop">
+              <DropZone />
+            </PhaseWrapper>
+          )}
+          {phase === 'selecting' && (
+            <PhaseWrapper key="selecting">
+              <PageSelector />
+            </PhaseWrapper>
+          )}
+          {phase === 'configuring' && (
+            <PhaseWrapper key="configuring">
+              <OutputConfig />
+            </PhaseWrapper>
+          )}
+          {phase === 'processing' && (
+            <PhaseWrapper key="processing">
+              <Processing />
+            </PhaseWrapper>
+          )}
+          {phase === 'complete' && (
+            <PhaseWrapper key="complete">
+              <Complete />
+            </PhaseWrapper>
+          )}
+          {phase === 'error' && (
+            <PhaseWrapper key="error">
+              <ErrorScreen />
+            </PhaseWrapper>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
