@@ -19,6 +19,7 @@ win:
   icon: resources/icon.ico
 
 nsis:
+  artifactName: PDFDecomposer-Setup-${version}.exe
   oneClick: false
   perMachine: false
   allowToChangeInstallationDirectory: true
