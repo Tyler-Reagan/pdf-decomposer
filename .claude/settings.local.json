@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(which node npm npx python3 pip3 cargo rustc 2>/dev/null; node --version 2>/dev/null; npm --version 2>/dev/null; python3 --version 2>/dev/null; cargo --version 2>/dev/null)",
+      "Bash(npm list -g --depth=0 2>/dev/null | head -30; npx create-electron-app --version 2>/dev/null || true)",
+      "Bash(pip3 show PyMuPDF PyQt6 pyinstaller pywebview 2>/dev/null || pip3 list 2>/dev/null | grep -i \"pymupdf\\\\|pyqt\\\\|pyinstaller\\\\|pywebview\\\\|tkinter\")",
+      "Bash(pip3 list 2>/dev/null | head -50)",
+      "Bash(npx --yes @electron-forge/cli --version 2>/dev/null || true; npm show electron version 2>/dev/null; npm show @electron/packager version 2>/dev/null)",
+      "Bash(npm show electron-builder version 2>/dev/null; npm show vite version 2>/dev/null; npm show pdf-lib version 2>/dev/null; npm show pdfjs-dist version 2>/dev/null)",
+      "Bash(npm show electron-builder dist-tags.latest 2>/dev/null; npm show nsis version 2>/dev/null; npm show electron-winstaller version 2>/dev/null)",
+      "Bash(npm show @vitejs/plugin-react version 2>/dev/null; npm show react version 2>/dev/null; npm show typescript version 2>/dev/null; npm show tailwindcss version 2>/dev/null)",
+      "Bash(npm show framer-motion version 2>/dev/null; npm show zustand version 2>/dev/null; npm show @radix-ui/react-dialog version 2>/dev/null; npm show react-window version 2>/dev/null)",
+      "Bash(npm show canvas version 2>/dev/null; npm show @napi-rs/canvas version 2>/dev/null; npm show sharp version 2>/dev/null)",
+      "Bash(npm show electron-builder 2>/dev/null | grep -A5 \"description\\\\|keywords\" | head -20)",
+      "Bash(npm show electron-vite 2>/dev/null | grep -E \"description|keywords|version\" | head -10)",
+      "Bash(npm show react-colorful version 2>/dev/null; npm show @hello-pangea/dnd version 2>/dev/null; npm show react-intersection-observer version 2>/dev/null)",
+      "Bash(npm install 2>&1 | tail -20)",
+      "Bash(npm run build 2>&1)",
+      "Bash(npm install immer 2>&1 | tail -5)",
+      "Bash(npx tsc --project tsconfig.web.json --noEmit 2>&1 | head -60)",
+      "Bash(npx tsc --project tsconfig.node.json --noEmit 2>&1 | head -40)",
+      "Bash(git init && git add -A && git commit -m \"Initial implementation of PDF Decomposer\n\nFull Electron + React + TypeScript app with:\n- Drag-and-drop PDF loading\n- Visual page thumbnail grid with pdfjs Web Worker\n- Lasso + shift/ctrl multi-selection\n- Color-coded page groups\n- Output config with custom filenames\n- PDF splitting via pdf-lib\n- Animated completion screen\n- NSIS per-user installer + portable exe config\" 2>&1)"
+    ]
+  }
+}

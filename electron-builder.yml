@@ -1,0 +1,31 @@
+appId: com.pdfdecomposer.app
+productName: PDF Decomposer
+directories:
+  buildResources: resources
+  output: dist
+
+files:
+  - out/**/*
+
+win:
+  requestedExecutionLevel: asInvoker
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  icon: resources/icon.ico
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+
+portable:
+  artifactName: PDFDecomposer-portable.exe
