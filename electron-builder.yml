@@ -1,5 +1,6 @@
 appId: com.pdfdecomposer.app
 productName: PDF Decomposer
+copyright: Copyright © 2025 PDF Decomposer
 directories:
   buildResources: resources
   output: dist
@@ -9,6 +10,7 @@ files:
 
 win:
   requestedExecutionLevel: asInvoker
+  publisherName: PDF Decomposer
   target:
     - target: nsis
       arch:
