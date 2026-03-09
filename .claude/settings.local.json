@@ -24,7 +24,10 @@
       "Bash(git add .github/workflows/build.yml && git commit -m \"Fix: pass GH_TOKEN to build step for electron-builder CI detection\")",
       "Bash(git add electron-builder.yml && git commit -m \"Fix: set NSIS artifactName to match workflow upload glob\")",
       "Bash(git push origin master 2>&1)",
-      "Bash(sleep 5 && jobs -l)"
+      "Bash(sleep 5 && jobs -l)",
+      "Bash(xxd:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)"
     ]
   }
 }

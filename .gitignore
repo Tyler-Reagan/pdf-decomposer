@@ -7,3 +7,4 @@ out
 .env.local
 *.pdf
 *Zone.Identifier
+.claude/settings.local.json
