@@ -10,7 +10,8 @@ interface PageThumbnailProps {
   isSelected: boolean
   onMouseDown: (e: React.MouseEvent, index: number) => void
   onMouseEnter: (e: React.MouseEvent, index: number) => void
-  observerRef: (el: HTMLDivElement | null) => void
+  cardRef: (el: HTMLDivElement | null) => void
+  cardHeight: number
 }
 
 export const PageThumbnail = memo(function PageThumbnail({
@@ -21,7 +22,8 @@ export const PageThumbnail = memo(function PageThumbnail({
   isSelected,
   onMouseDown,
   onMouseEnter,
-  observerRef
+  cardRef,
+  cardHeight
 }: PageThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -39,15 +41,15 @@ export const PageThumbnail = memo(function PageThumbnail({
 
   return (
     <div
-      ref={observerRef}
+      ref={cardRef}
       data-page-index={pageIndex}
       onMouseDown={(e) => onMouseDown(e, pageIndex)}
       onMouseEnter={(e) => onMouseEnter(e, pageIndex)}
       className="relative select-none cursor-pointer"
-      style={{ userSelect: 'none' }}
+      style={{ height: cardHeight, userSelect: 'none' }}
     >
       <motion.div
-        className="relative rounded-lg overflow-hidden bg-slate-800"
+        className="relative rounded-lg overflow-hidden bg-slate-800 flex flex-col h-full"
         style={{
           border: `${borderWidth}px solid ${isSelected ? '#6366f1' : group ? group.color + '80' : '#334155'}`,
           boxShadow: isSelected
@@ -83,8 +85,8 @@ export const PageThumbnail = memo(function PageThumbnail({
           </div>
         )}
 
-        {/* Canvas or placeholder — fixed container, canvas fills it naturally */}
-        <div className="w-[120px] h-[160px] flex items-center justify-center bg-slate-800">
+        {/* Thumbnail area — fills available height, canvas scales to fit */}
+        <div className="flex-1 flex items-center justify-center bg-slate-800 overflow-hidden min-h-0">
           {bitmap ? (
             <canvas
               ref={canvasRef}
@@ -114,7 +116,7 @@ export const PageThumbnail = memo(function PageThumbnail({
         </div>
 
         {/* Page number */}
-        <div className="absolute bottom-0 left-0 right-0 bg-slate-900/80 text-center py-1">
+        <div className="bg-slate-900/80 text-center py-1 flex-shrink-0">
           <span className="text-slate-400 text-[11px] font-medium">{pageIndex + 1}</span>
         </div>
       </motion.div>

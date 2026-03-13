@@ -7,9 +7,16 @@ import { FloatingActionBar } from './FloatingActionBar'
 import { PagePreviewModal } from './PagePreviewModal'
 import { Button } from '../../components/Button'
 
-const CARD_WIDTH = 138
-const THUMB_W = 120
-const THUMB_H = 160
+// Virtual scroll / window constants
+const COLS = 3
+const ROWS_PER_WINDOW = 2
+const PAGES_PER_WINDOW = COLS * ROWS_PER_WINDOW  // 6
+const THUMB_W = 200
+const THUMB_H = 267  // ~3:4 ratio
+const CARD_H = 300   // fixed card height for predictable row math
+const GAP = 16
+const ROW_HEIGHT = CARD_H + GAP
+const PADDING_V = 24
 
 export function PageSelector() {
   const {
@@ -28,6 +35,7 @@ export function PageSelector() {
   const [errorPages, setErrorPages] = useState<Set<number>>(new Set())
   const [initialized, setInitialized] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [windowStart, setWindowStart] = useState(0)
 
   // Lasso state — coords in scroll-content space
   const [lasso, setLasso] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -43,10 +51,7 @@ export function PageSelector() {
       stableCardRefCallbacks.current.set(pageIndex, (el: HTMLDivElement | null) => {
         if (el) {
           cardRefs.current.set(pageIndex, el)
-          observerRef.current?.observe(el)
         } else {
-          const old = cardRefs.current.get(pageIndex)
-          if (old) observerRef.current?.unobserve(old)
           cardRefs.current.delete(pageIndex)
           stableCardRefCallbacks.current.delete(pageIndex)
         }
@@ -55,19 +60,39 @@ export function PageSelector() {
     return stableCardRefCallbacks.current.get(pageIndex)!
   }, [])
 
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const renderRequestedRef = useRef<Set<number>>(new Set())
+  const totalPages = loadedPdf?.totalPages ?? 0
+
+  // Window pages — always snapped to row boundaries
+  const windowPages = Array.from(
+    { length: Math.min(PAGES_PER_WINDOW, totalPages - windowStart) },
+    (_, i) => windowStart + i
+  )
+
+  // Sync currentWindowRef so onPageRendered can discard out-of-window bitmaps
+  const currentWindowRef = useRef<Set<number>>(new Set())
+  currentWindowRef.current = new Set(windowPages)
 
   const { initWorker, renderPage } = usePdfWorker({
     onReady: () => setInitialized(true),
     onPageRendered: (pageIndex, bitmap, renderType) => {
-      if (renderType === 'preview') {
-        setPreviewBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
+      if (renderType === 'thumb') {
+        if (!currentWindowRef.current.has(pageIndex)) {
+          bitmap.close()
+          return
+        }
+        setThumbBitmaps((prev) => {
+          prev.get(pageIndex)?.close()
+          return new Map(prev).set(pageIndex, bitmap)
+        })
       } else {
-        setThumbBitmaps((prev) => new Map(prev).set(pageIndex, bitmap))
+        setPreviewBitmaps((prev) => {
+          prev.get(pageIndex)?.close()
+          return new Map(prev).set(pageIndex, bitmap)
+        })
       }
     },
-    onPageError: (pageIndex) => {
+    onPageError: (pageIndex, renderType) => {
+      if (renderType === 'thumb' && !currentWindowRef.current.has(pageIndex)) return
       setErrorPages((prev) => new Set(prev).add(pageIndex))
     }
   })
@@ -84,39 +109,67 @@ export function PageSelector() {
     return () => { cancelled = true }
   }, [loadedPdf, initWorker])
 
-  // Set up IntersectionObserver rooted at the scroll container so it fires
-  // correctly as the user scrolls within the overflow div (not just the viewport)
+  // Window change: evict bitmaps for departing pages, request renders for arriving pages
+  const prevWindowPagesRef = useRef<Set<number>>(new Set())
   useEffect(() => {
-    if (!initialized || !scrollContainerRef.current) return
+    if (!initialized) return
 
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const el = entry.target as HTMLDivElement
-          const idx = parseInt(el.dataset.pageIndex ?? '-1')
-          if (idx < 0) continue
-          if (entry.isIntersecting && !renderRequestedRef.current.has(idx)) {
-            renderRequestedRef.current.add(idx)
-            renderPage(idx, 'thumb', { targetWidth: THUMB_W, targetHeight: THUMB_H })
-          }
+    const newWindow = new Set(windowPages)
+    const entering = windowPages.filter((i) => !prevWindowPagesRef.current.has(i))
+    const leaving = [...prevWindowPagesRef.current].filter((i) => !newWindow.has(i))
+
+    if (leaving.length > 0) {
+      setThumbBitmaps((prev) => {
+        const next = new Map(prev)
+        for (const i of leaving) {
+          next.get(i)?.close()
+          next.delete(i)
         }
-      },
-      {
-        root: scrollContainerRef.current,   // ← key fix: observe within the div
-        threshold: 0.1,
-        rootMargin: '200px'
-      }
-    )
+        return next
+      })
+      // Clear error state so evicted pages can retry when they re-enter the window
+      setErrorPages((prev) => {
+        const next = new Set(prev)
+        for (const i of leaving) next.delete(i)
+        return next
+      })
+    }
 
-    for (const [, el] of cardRefs.current) observerRef.current.observe(el)
-    return () => observerRef.current?.disconnect()
-  }, [initialized, renderPage])
+    for (const i of entering) {
+      renderPage(i, 'thumb', { targetWidth: THUMB_W, targetHeight: THUMB_H })
+    }
 
-  // Preview: request high-res renders for selected pages
-  const handleOpenPreview = useCallback(() => {
-    setShowPreview(true)
+    prevWindowPagesRef.current = newWindow
+  }, [initialized, windowStart]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close all bitmaps on unmount
+  useEffect(() => {
+    return () => {
+      setThumbBitmaps((prev) => { prev.forEach((b) => b.close()); return new Map() })
+      setPreviewBitmaps((prev) => { prev.forEach((b) => b.close()); return new Map() })
+    }
   }, [])
 
+  // Scroll → advance window, snapped to row boundaries
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const totalRows = Math.ceil(totalPages / COLS)
+    const virtualH = PADDING_V * 2 + totalRows * ROW_HEIGHT - GAP
+    const maxRow = Math.max(0, totalRows - ROWS_PER_WINDOW)
+
+    // Snap to last window when scrolled near the bottom
+    if (el.scrollTop + el.clientHeight >= virtualH - GAP) {
+      setWindowStart(maxRow * COLS)
+      return
+    }
+
+    const firstRow = Math.max(0, Math.floor((el.scrollTop - PADDING_V) / ROW_HEIGHT))
+    setWindowStart(Math.min(firstRow, maxRow) * COLS)
+  }, [totalPages])
+
+  // Preview: request high-res renders for selected pages
+  const handleOpenPreview = useCallback(() => { setShowPreview(true) }, [])
   const handlePreviewRender = useCallback((pageIndex: number) => {
     renderPage(pageIndex, 'preview', { fixedScale: 1.5 })
   }, [renderPage])
@@ -217,8 +270,11 @@ export function PageSelector() {
 
   if (!loadedPdf) return null
 
-  const totalPages = loadedPdf.totalPages
   const sortedSelected = [...selectedPageIndices].sort((a, b) => a - b)
+
+  const totalRows = Math.ceil(totalPages / COLS)
+  const totalVirtualHeight = PADDING_V * 2 + totalRows * ROW_HEIGHT - GAP
+  const windowOffsetY = PADDING_V + (windowStart / COLS) * ROW_HEIGHT
 
   return (
     <div className="flex h-full bg-slate-900 select-none">
@@ -265,27 +321,36 @@ export function PageSelector() {
         <div
           ref={scrollContainerRef}
           className="relative flex-1 overflow-y-auto"
+          onScroll={handleScroll}
           onMouseMove={handleGridMouseMove}
           onMouseUp={handleGridMouseUp}
           onMouseLeave={handleGridMouseUp}
         >
-          <div
-            className="grid gap-4 p-6"
-            style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${CARD_WIDTH}px, 1fr))` }}
-          >
-            {Array.from({ length: totalPages }, (_, i) => (
-              <PageThumbnail
-                key={i}
-                pageIndex={i}
-                bitmap={thumbBitmaps.get(i) ?? null}
-                hasError={errorPages.has(i)}
-                group={groups.find((g) => g.pageIndices.includes(i))}
-                isSelected={selectedPageIndices.has(i)}
-                onMouseDown={handleMouseDown}
-                onMouseEnter={handleMouseEnter}
-                observerRef={getCardRef(i)}
-              />
-            ))}
+          {/* Virtual height spacer — gives the scrollbar the correct proportion */}
+          <div style={{ height: totalVirtualHeight, position: 'relative' }}>
+            {/* Sliding window grid — absolutely positioned at the window's row offset */}
+            <div
+              className="absolute left-0 right-0 grid gap-4 px-6"
+              style={{
+                top: windowOffsetY,
+                gridTemplateColumns: `repeat(${COLS}, 1fr)`
+              }}
+            >
+              {windowPages.map((pageIndex) => (
+                <PageThumbnail
+                  key={pageIndex}
+                  pageIndex={pageIndex}
+                  bitmap={thumbBitmaps.get(pageIndex) ?? null}
+                  hasError={errorPages.has(pageIndex)}
+                  group={groups.find((g) => g.pageIndices.includes(pageIndex))}
+                  isSelected={selectedPageIndices.has(pageIndex)}
+                  onMouseDown={handleMouseDown}
+                  onMouseEnter={handleMouseEnter}
+                  cardRef={getCardRef(pageIndex)}
+                  cardHeight={CARD_H}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Lasso */}
