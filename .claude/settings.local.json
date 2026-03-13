@@ -27,7 +27,8 @@
       "Bash(sleep 5 && jobs -l)",
       "Bash(xxd:*)",
       "Bash(node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

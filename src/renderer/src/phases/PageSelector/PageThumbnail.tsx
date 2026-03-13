@@ -10,6 +10,7 @@ interface PageThumbnailProps {
   isSelected: boolean
   onMouseDown: (e: React.MouseEvent, index: number) => void
   onMouseEnter: (e: React.MouseEvent, index: number) => void
+  onNativePreview: (pageIndex: number) => void
   cardRef: (el: HTMLDivElement | null) => void
   cardHeight: number
 }
@@ -22,6 +23,7 @@ export const PageThumbnail = memo(function PageThumbnail({
   isSelected,
   onMouseDown,
   onMouseEnter,
+  onNativePreview,
   cardRef,
   cardHeight
 }: PageThumbnailProps) {
@@ -99,14 +101,22 @@ export const PageThumbnail = memo(function PageThumbnail({
               }}
             />
           ) : hasError ? (
-            <div className="flex flex-col items-center justify-center gap-2 w-full h-full opacity-50">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5">
+            <button
+              className="flex flex-col items-center justify-center gap-2 w-full h-full group/native"
+              title="Open in native viewer"
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onNativePreview(pageIndex) }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" className="opacity-50 group-hover/native:opacity-80 transition-opacity">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="text-slate-500 text-[10px]">Failed</span>
-            </div>
+              <span className="text-slate-500 text-[10px] opacity-50">Failed to render</span>
+              <span className="text-indigo-400 text-[10px] font-medium opacity-0 group-hover/native:opacity-100 transition-opacity">
+                Open in viewer
+              </span>
+            </button>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
               <div className="w-8 h-10 rounded-sm bg-slate-700 animate-pulse" />
