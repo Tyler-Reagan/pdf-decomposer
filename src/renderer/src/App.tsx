@@ -1,49 +1,49 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { usePdfStore } from './store/usePdfStore'
-import { DropZone } from './phases/DropZone'
-import { PageSelector } from './phases/PageSelector'
-import { OutputConfig } from './phases/OutputConfig'
-import { Processing, Complete, ErrorScreen } from './phases/Processing'
+import { AnimatePresence, motion } from "framer-motion";
+import { usePdfStore } from "./store/usePdfStore";
+import { DropZone } from "./phases/DropZone";
+import { PageSelector } from "./phases/PageSelector";
+import { OutputConfig } from "./phases/OutputConfig";
+import { Processing, Complete, ErrorScreen } from "./phases/Processing";
 
 export function App() {
-  const phase = usePdfStore((s) => s.phase)
+  const phase = usePdfStore((s) => s.phase);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-slate-900 text-white ring-1 ring-white/[0.06]">
       {/* Draggable title bar — must match titleBarOverlay height in main/index.ts */}
       <div
         className="flex-shrink-0 w-full"
-        style={{ height: 38, WebkitAppRegion: 'drag' } as React.CSSProperties}
+        style={{ height: 38, WebkitAppRegion: "drag" } as React.CSSProperties}
       />
       {/* Phase content fills remaining space */}
       <div className="flex-1 relative overflow-hidden">
         <AnimatePresence mode="wait">
-          {phase === 'drop' && (
+          {phase === "drop" && (
             <PhaseWrapper key="drop">
               <DropZone />
             </PhaseWrapper>
           )}
-          {phase === 'selecting' && (
+          {phase === "selecting" && (
             <PhaseWrapper key="selecting">
               <PageSelector />
             </PhaseWrapper>
           )}
-          {phase === 'configuring' && (
+          {phase === "configuring" && (
             <PhaseWrapper key="configuring">
               <OutputConfig />
             </PhaseWrapper>
           )}
-          {phase === 'processing' && (
+          {phase === "processing" && (
             <PhaseWrapper key="processing">
               <Processing />
             </PhaseWrapper>
           )}
-          {phase === 'complete' && (
+          {phase === "complete" && (
             <PhaseWrapper key="complete">
               <Complete />
             </PhaseWrapper>
           )}
-          {phase === 'error' && (
+          {phase === "error" && (
             <PhaseWrapper key="error">
               <ErrorScreen />
             </PhaseWrapper>
@@ -51,7 +51,7 @@ export function App() {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }
 
 function PhaseWrapper({ children }: { children: React.ReactNode }) {
@@ -65,5 +65,5 @@ function PhaseWrapper({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
-  )
+  );
 }

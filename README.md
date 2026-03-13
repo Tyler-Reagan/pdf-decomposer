@@ -30,11 +30,13 @@ npm run dev
 ```
 
 **Build (transpile only):**
+
 ```bash
 npm run build
 ```
 
 **Package for Windows (run on Windows or via CI):**
+
 ```bash
 npm run dist
 ```
@@ -54,15 +56,15 @@ git push origin v1.0.0
 
 ## Tech Stack
 
-| Layer | Library |
-|---|---|
-| Shell | Electron 33 |
-| Bundler | electron-vite 2 / Vite 5 |
-| UI | React 19 + Tailwind v4 |
-| State | Zustand 5 + Immer |
-| Animation | Framer Motion 11 |
-| PDF rendering | pdfjs-dist 4 (Web Worker) |
-| PDF writing | pdf-lib 1.17 (main process) |
+| Layer         | Library                     |
+| ------------- | --------------------------- |
+| Shell         | Electron 33                 |
+| Bundler       | electron-vite 2 / Vite 5    |
+| UI            | React 19 + Tailwind v4      |
+| State         | Zustand 5 + Immer           |
+| Animation     | Framer Motion 11            |
+| PDF rendering | pdfjs-dist 4 (Web Worker)   |
+| PDF writing   | pdf-lib 1.17 (main process) |
 
 ## License
 

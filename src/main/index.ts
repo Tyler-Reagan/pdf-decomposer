@@ -1,7 +1,7 @@
-import { app, shell, BrowserWindow, nativeTheme } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import { registerIpcHandlers } from './ipc'
+import { app, shell, BrowserWindow, nativeTheme } from "electron";
+import { join } from "path";
+import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import { registerIpcHandlers } from "./ipc";
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -11,59 +11,59 @@ function createWindow(): void {
     minHeight: 640,
     show: false,
     autoHideMenuBar: true,
-    icon: join(__dirname, '../../resources/icon.ico'),
-    backgroundColor: '#0f172a',
-    titleBarStyle: 'hidden',
+    icon: join(__dirname, "../../resources/icon.ico"),
+    backgroundColor: "#0f172a",
+    titleBarStyle: "hidden",
     titleBarOverlay: {
-      color: '#0f172a',
-      symbolColor: '#94a3b8',
-      height: 38
+      color: "#0f172a",
+      symbolColor: "#94a3b8",
+      height: 38,
     },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
-      webviewTag: true
-    }
-  })
+      webviewTag: true,
+    },
+  });
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
+  mainWindow.on("ready-to-show", () => {
+    mainWindow.show();
+  });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+    shell.openExternal(details.url);
+    return { action: "deny" };
+  });
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+    mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
 
 // Force dark theme so native OS dialogs (file/folder pickers) use dark styling
-nativeTheme.themeSource = 'dark'
+nativeTheme.themeSource = "dark";
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId('com.pdfdecomposer')
+  electronApp.setAppUserModelId("com.pdfdecomposer");
 
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+  app.on("browser-window-created", (_, window) => {
+    optimizer.watchWindowShortcuts(window);
+  });
 
-  registerIpcHandlers()
-  createWindow()
+  registerIpcHandlers();
+  createWindow();
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
-  })
-})
+  app.on("activate", function () {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});

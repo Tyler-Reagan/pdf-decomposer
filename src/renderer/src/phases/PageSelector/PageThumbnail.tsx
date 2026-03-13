@@ -1,18 +1,18 @@
-import { useEffect, useRef, memo } from 'react'
-import { motion } from 'framer-motion'
-import type { PageGroup } from '../../types/pdf'
+import { useEffect, useRef, memo } from "react";
+import { motion } from "framer-motion";
+import type { PageGroup } from "../../types/pdf";
 
 interface PageThumbnailProps {
-  pageIndex: number
-  bitmap: ImageBitmap | null
-  hasError: boolean
-  group: PageGroup | undefined
-  isSelected: boolean
-  onMouseDown: (e: React.MouseEvent, index: number) => void
-  onMouseEnter: (e: React.MouseEvent, index: number) => void
-  onNativePreview: (pageIndex: number) => void
-  cardRef: (el: HTMLDivElement | null) => void
-  cardHeight: number
+  pageIndex: number;
+  bitmap: ImageBitmap | null;
+  hasError: boolean;
+  group: PageGroup | undefined;
+  isSelected: boolean;
+  onMouseDown: (e: React.MouseEvent, index: number) => void;
+  onMouseEnter: (e: React.MouseEvent, index: number) => void;
+  onNativePreview: (pageIndex: number) => void;
+  cardRef: (el: HTMLDivElement | null) => void;
+  cardHeight: number;
 }
 
 export const PageThumbnail = memo(function PageThumbnail({
@@ -25,21 +25,21 @@ export const PageThumbnail = memo(function PageThumbnail({
   onMouseEnter,
   onNativePreview,
   cardRef,
-  cardHeight
+  cardHeight,
 }: PageThumbnailProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!bitmap || !canvasRef.current) return
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    canvas.width = bitmap.width
-    canvas.height = bitmap.height
-    ctx.drawImage(bitmap, 0, 0)
-  }, [bitmap])
+    if (!bitmap || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    ctx.drawImage(bitmap, 0, 0);
+  }, [bitmap]);
 
-  const borderWidth = isSelected || group ? 2 : 1
+  const borderWidth = isSelected || group ? 2 : 1;
 
   return (
     <div
@@ -48,20 +48,20 @@ export const PageThumbnail = memo(function PageThumbnail({
       onMouseDown={(e) => onMouseDown(e, pageIndex)}
       onMouseEnter={(e) => onMouseEnter(e, pageIndex)}
       className="relative select-none cursor-pointer"
-      style={{ height: cardHeight, userSelect: 'none' }}
+      style={{ height: cardHeight, userSelect: "none" }}
     >
       <motion.div
         className="relative rounded-lg overflow-hidden bg-slate-800 flex flex-col h-full"
         style={{
-          border: `${borderWidth}px solid ${isSelected ? '#6366f1' : group ? group.color + '80' : '#334155'}`,
+          border: `${borderWidth}px solid ${isSelected ? "#6366f1" : group ? group.color + "80" : "#334155"}`,
           boxShadow: isSelected
-            ? '0 0 0 2px rgba(99,102,241,0.4), 0 4px 12px rgba(0,0,0,0.4)'
+            ? "0 0 0 2px rgba(99,102,241,0.4), 0 4px 12px rgba(0,0,0,0.4)"
             : group
-            ? `0 0 0 1px ${group.color}30`
-            : '0 2px 8px rgba(0,0,0,0.3)'
+              ? `0 0 0 1px ${group.color}30`
+              : "0 2px 8px rgba(0,0,0,0.3)",
         }}
         animate={{
-          scale: isSelected ? 1.03 : 1
+          scale: isSelected ? 1.03 : 1,
         }}
         transition={{ duration: 0.1 }}
       >
@@ -82,7 +82,13 @@ export const PageThumbnail = memo(function PageThumbnail({
         {isSelected && (
           <div className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center shadow">
             <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-              <path d="M1 4L4 7L10 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M1 4L4 7L10 1"
+                stroke="white"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
         )}
@@ -93,11 +99,11 @@ export const PageThumbnail = memo(function PageThumbnail({
             <canvas
               ref={canvasRef}
               style={{
-                display: 'block',
-                maxWidth: '100%',
-                maxHeight: '100%',
-                width: 'auto',
-                height: 'auto'
+                display: "block",
+                maxWidth: "100%",
+                maxHeight: "100%",
+                width: "auto",
+                height: "auto",
               }}
             />
           ) : hasError ? (
@@ -105,14 +111,27 @@ export const PageThumbnail = memo(function PageThumbnail({
               className="flex flex-col items-center justify-center gap-2 w-full h-full group/native"
               title="Open in native viewer"
               onMouseDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); onNativePreview(pageIndex) }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onNativePreview(pageIndex);
+              }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" className="opacity-50 group-hover/native:opacity-80 transition-opacity">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                className="opacity-50 group-hover/native:opacity-80 transition-opacity"
+              >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="text-slate-500 text-[10px] opacity-50">Failed to render</span>
+              <span className="text-slate-500 text-[10px] opacity-50">
+                Failed to render
+              </span>
               <span className="text-indigo-400 text-[10px] font-medium opacity-0 group-hover/native:opacity-100 transition-opacity">
                 Open in viewer
               </span>
@@ -127,9 +146,11 @@ export const PageThumbnail = memo(function PageThumbnail({
 
         {/* Page number */}
         <div className="bg-slate-900/80 text-center py-1 flex-shrink-0">
-          <span className="text-slate-400 text-[11px] font-medium">{pageIndex + 1}</span>
+          <span className="text-slate-400 text-[11px] font-medium">
+            {pageIndex + 1}
+          </span>
         </div>
       </motion.div>
     </div>
-  )
-})
+  );
+});

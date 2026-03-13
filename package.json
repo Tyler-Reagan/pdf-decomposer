@@ -6,20 +6,23 @@
   "author": "PDF Decomposer",
   "license": "MIT",
   "scripts": {
-    "format": "prettier --write .",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "typecheck": "tsc --noEmit",
-    "dev": "GTK_THEME=Adwaita:dark electron-vite dev",
     "build": "electron-vite build",
-    "postinstall": "electron-builder install-app-deps",
+    "dev": "GTK_THEME=Adwaita:dark electron-vite dev",
     "dist": "electron-vite build && electron-builder",
-    "dist:win": "electron-vite build && electron-builder --win"
+    "dist:win": "electron-vite build && electron-builder --win",
+    "format": "prettier --write .",
+    "knip": "knip",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "postinstall": "electron-builder install-app-deps",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
     "framer-motion": "^11.15.0",
     "immer": "^11.1.4",
+    "knip": "^5.86.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.9.155",
     "react": "^19.0.0",
@@ -28,7 +31,6 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@squoosh/lib": "^0.3.1",
     "@tailwindcss/vite": "^4.0.6",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
@@ -38,8 +40,7 @@
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
     "eslint": "^9.17.0",
-    "jimp": "^1.6.0",
-    "png-to-ico": "^3.0.1",
+    "prettier": "^3.8.1",
     "tailwindcss": "^4.0.6",
     "typescript": "^5.7.3"
   }

@@ -1,15 +1,15 @@
-import { memo } from 'react'
-import { motion } from 'framer-motion'
-import type { PageGroup } from '../../types/pdf'
+import { memo } from "react";
+import { motion } from "framer-motion";
+import type { PageGroup } from "../../types/pdf";
 
 interface PageNodeProps {
-  pageIndex: number
-  group: PageGroup | undefined
-  isSelected: boolean
-  isFocused: boolean  // currently shown in the webview
-  onMouseDown: (e: React.MouseEvent, index: number) => void
-  onMouseEnter: (e: React.MouseEvent, index: number) => void
-  nodeRef: (el: HTMLDivElement | null) => void
+  pageIndex: number;
+  group: PageGroup | undefined;
+  isSelected: boolean;
+  isFocused: boolean; // currently shown in the webview
+  onMouseDown: (e: React.MouseEvent, index: number) => void;
+  onMouseEnter: (e: React.MouseEvent, index: number) => void;
+  nodeRef: (el: HTMLDivElement | null) => void;
 }
 
 export const PageNode = memo(function PageNode({
@@ -19,17 +19,17 @@ export const PageNode = memo(function PageNode({
   isFocused,
   onMouseDown,
   onMouseEnter,
-  nodeRef
+  nodeRef,
 }: PageNodeProps) {
   const borderColor = isSelected
-    ? '#6366f1'
+    ? "#6366f1"
     : isFocused
-    ? '#818cf8'
-    : group
-    ? group.color + '80'
-    : '#334155'
+      ? "#818cf8"
+      : group
+        ? group.color + "80"
+        : "#334155";
 
-  const borderWidth = isSelected || group || isFocused ? 2 : 1
+  const borderWidth = isSelected || group || isFocused ? 2 : 1;
 
   return (
     <div
@@ -38,19 +38,19 @@ export const PageNode = memo(function PageNode({
       onMouseDown={(e) => onMouseDown(e, pageIndex)}
       onMouseEnter={(e) => onMouseEnter(e, pageIndex)}
       className="relative select-none cursor-pointer"
-      style={{ aspectRatio: '3 / 4', userSelect: 'none' }}
+      style={{ aspectRatio: "3 / 4", userSelect: "none" }}
     >
       <motion.div
         className="relative rounded-md overflow-hidden bg-slate-800 flex flex-col h-full"
         style={{
           border: `${borderWidth}px solid ${borderColor}`,
           boxShadow: isSelected
-            ? '0 0 0 2px rgba(99,102,241,0.4)'
+            ? "0 0 0 2px rgba(99,102,241,0.4)"
             : isFocused
-            ? '0 0 0 1px rgba(129,140,248,0.25)'
-            : group
-            ? `0 0 0 1px ${group.color}30`
-            : 'none'
+              ? "0 0 0 1px rgba(129,140,248,0.25)"
+              : group
+                ? `0 0 0 1px ${group.color}30`
+                : "none",
         }}
         animate={{ scale: isSelected ? 1.04 : 1 }}
         transition={{ duration: 0.1 }}
@@ -96,9 +96,11 @@ export const PageNode = memo(function PageNode({
 
         {/* Page number */}
         <div className="bg-slate-900/70 text-center py-0.5 flex-shrink-0">
-          <span className="text-slate-400 text-[9px] font-medium">{pageIndex + 1}</span>
+          <span className="text-slate-400 text-[9px] font-medium">
+            {pageIndex + 1}
+          </span>
         </div>
       </motion.div>
     </div>
-  )
-})
+  );
+});

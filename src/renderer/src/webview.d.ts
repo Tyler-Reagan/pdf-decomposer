@@ -2,15 +2,15 @@
 declare namespace JSX {
   interface IntrinsicElements {
     webview: {
-      src?: string
-      style?: import('react').CSSProperties
-      className?: string
-      allowpopups?: string
-      partition?: string
-      preload?: string
-      webpreferences?: string
+      src?: string;
+      style?: import("react").CSSProperties;
+      className?: string;
+      allowpopups?: string;
+      partition?: string;
+      preload?: string;
+      webpreferences?: string;
       // Allow ref and any other webview-specific attributes without exhaustively listing them
-      [key: string]: unknown
-    }
+      [key: string]: unknown;
+    };
   }
 }
