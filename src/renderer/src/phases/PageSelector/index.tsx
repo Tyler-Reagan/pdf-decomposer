@@ -58,6 +58,11 @@ export function PageSelector() {
     const ngEl = nodeGridPanelRef.current
     if (!wvEl || !ngEl) return
 
+    // Prevent the webview's separate renderer process from capturing pointer
+    // events mid-drag. Without this, mousing over the webview causes the OS to
+    // redirect events to the webview process and the drag handler goes silent.
+    wvEl.style.pointerEvents = 'none'
+
     const startX = e.clientX
     const startWebviewW = wvEl.getBoundingClientRect().width
     const startNodeW = ngEl.getBoundingClientRect().width
@@ -71,6 +76,7 @@ export function PageSelector() {
       )
     }
     const onUp = (): void => {
+      wvEl.style.pointerEvents = ''
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
     }
