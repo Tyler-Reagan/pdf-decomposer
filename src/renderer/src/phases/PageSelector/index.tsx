@@ -18,8 +18,6 @@ export function PageSelector() {
     setSelectedPageIndices,
     clearSelection,
     groups,
-    addGroup,
-    assignPagesToGroup,
     setPhase
   } = usePdfStore()
 
@@ -189,12 +187,6 @@ export function PageSelector() {
     setLasso(null)
   }, [])
 
-  const handleAddGroupWithSelection = useCallback(() => {
-    const group = addGroup()
-    assignPagesToGroup(group.id, [...selectedPageIndices])
-    clearSelection()
-  }, [addGroup, assignPagesToGroup, selectedPageIndices, clearSelection])
-
   const canContinue = groups.length > 0 && groups.some((g) => g.pageIndices.length > 0)
 
   if (!loadedPdf) return null
@@ -311,10 +303,7 @@ export function PageSelector() {
             )}
           </div>
 
-          <FloatingActionBar
-            visible={selectedPageIndices.size > 0}
-            onAddGroup={handleAddGroupWithSelection}
-          />
+          <FloatingActionBar visible={selectedPageIndices.size > 0} />
         </div>
 
         {/* ── Group panel ─────────────────────────────────────────────── */}
