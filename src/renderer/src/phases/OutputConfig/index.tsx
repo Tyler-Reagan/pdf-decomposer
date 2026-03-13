@@ -1,15 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { join } from "path";
 import { usePdfStore } from "../../store/usePdfStore";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import { Button } from "../../components/Button";
 import type { OutputFile } from "../../types/pdf";
-
-// path.join doesn't exist in renderer — use a simple helper
-function joinPath(...parts: string[]): string {
-  return parts.join("/").replace(/\\/g, "/").replace(/\/+/g, "/");
-}
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[<>:"/\\|?*]/g, "_").trim();
@@ -31,36 +25,63 @@ export function OutputConfig() {
   } = usePdfStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Initialize output files from groups if not already set
-  useEffect(() => {
-    if (!loadedPdf) return;
-    const baseName = loadedPdf.fileName.replace(/\.pdf$/i, "");
-    const initialFiles: OutputFile[] = groups
-      .filter((g) => g.pageIndices.length > 0)
-      .map((g, idx) => ({
-        groupId: g.id,
-        outputFileName: sanitizeFileName(`${baseName}_${g.name}`),
-        outputFilePath: "",
-      }));
-
-    setOutputFiles(initialFiles);
-  }, []); // Only on mount
+  // per-groupId save directory; initialized from the store's last-used saveDirectory
+  const [outputDirs, setOutputDirs] = useState<Record<string, string>>({});
+  const [applyDirToAll, setApplyDirToAll] = useState(false);
 
   const activeGroups = groups.filter((g) => g.pageIndices.length > 0);
   const activeOutputFiles = outputFiles.filter((f) =>
     activeGroups.some((g) => g.id === f.groupId),
   );
 
-  const handleChooseDirectory = async () => {
+  // Initialize output files and per-output dirs on mount
+  useEffect(() => {
+    if (!loadedPdf) return;
+    const baseName = loadedPdf.fileName.replace(/\.pdf$/i, "");
+    const initialFiles: OutputFile[] = groups
+      .filter((g) => g.pageIndices.length > 0)
+      .map((g) => ({
+        groupId: g.id,
+        outputFileName: sanitizeFileName(`${baseName}_${g.name}`),
+        outputFilePath: "",
+      }));
+    setOutputFiles(initialFiles);
+
+    const initialDirs: Record<string, string> = {};
+    groups
+      .filter((g) => g.pageIndices.length > 0)
+      .forEach((g) => {
+        initialDirs[g.id] = saveDirectory;
+      });
+    setOutputDirs(initialDirs);
+  }, []); // Only on mount
+
+  const setOutputDir = (groupId: string, dir: string) => {
+    setOutputDirs((prev) => ({ ...prev, [groupId]: dir }));
+    setSaveDirectory(dir); // keep as "last used" hint for native dialog
+  };
+
+  const handleChooseDir = async (groupId: string) => {
+    const hint = outputDirs[groupId] || saveDirectory || undefined;
+    const dir = await window.electronAPI.chooseSaveDirectory(hint);
+    if (dir) setOutputDir(groupId, dir);
+  };
+
+  const handleChooseDirForAll = async () => {
     const dir = await window.electronAPI.chooseSaveDirectory(
       saveDirectory || undefined,
     );
-    if (dir) setSaveDirectory(dir);
+    if (!dir) return;
+    const next: Record<string, string> = {};
+    activeGroups.forEach((g) => {
+      next[g.id] = dir;
+    });
+    setOutputDirs(next);
+    setSaveDirectory(dir);
   };
 
   const handleStart = async () => {
-    if (!saveDirectory || !loadedPdf) return;
+    if (!loadedPdf) return;
     setIsProcessing(true);
     setPhase("processing");
 
@@ -69,9 +90,10 @@ export function OutputConfig() {
       const fileName = of_.outputFileName.endsWith(".pdf")
         ? of_.outputFileName
         : `${of_.outputFileName}.pdf`;
+      const dir = outputDirs[g.id] ?? "";
       return {
         groupId: g.id,
-        outputPath: `${saveDirectory}/${fileName}`.replace(/\/\//g, "/"),
+        outputPath: `${dir}/${fileName}`.replace(/\/\//g, "/"),
         pageIndices: g.pageIndices,
       };
     });
@@ -101,10 +123,9 @@ export function OutputConfig() {
     }
   };
 
-  const canStart = saveDirectory.length > 0 && activeGroups.length > 0;
+  const canStart =
+    activeGroups.length > 0 && activeGroups.every((g) => outputDirs[g.id]);
 
-  // If we land here with no PDF loaded (e.g. error before load completed),
-  // redirect to drop zone rather than rendering a blank screen.
   if (!loadedPdf) {
     setPhase("drop");
     return null;
@@ -132,12 +153,12 @@ export function OutputConfig() {
         <div className="flex-1">
           <h1 className="text-white font-semibold text-lg">Configure Output</h1>
           <p className="text-slate-500 text-sm">
-            Name your files and choose save location
+            Name your files and choose save locations
           </p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6 max-w-3xl w-full mx-auto">
+      <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6 max-w-3xl w-full mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -175,39 +196,55 @@ export function OutputConfig() {
             </div>
           </div>
 
-          {/* Save directory */}
-          <div>
-            <label className="block text-slate-300 text-sm font-medium mb-2">
-              Save Location
-            </label>
-            <div className="flex gap-2">
-              <div
-                className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-slate-300 truncate min-w-0 cursor-default"
-                title={saveDirectory}
-              >
-                {saveDirectory || (
-                  <span className="text-slate-600 italic">
-                    No folder selected
-                  </span>
-                )}
-              </div>
-              <Button variant="secondary" onClick={handleChooseDirectory}>
-                Browse…
-              </Button>
-            </div>
-          </div>
-
           {/* Output files */}
           <div>
-            <h2 className="text-slate-300 text-sm font-medium mb-3">
-              Output Files ({activeGroups.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-slate-300 text-sm font-medium">
+                Output Files ({activeGroups.length})
+              </h2>
+              {activeGroups.length > 1 && (
+                <label className="flex items-center gap-1.5 cursor-pointer select-none group/toggle">
+                  <input
+                    type="checkbox"
+                    checked={applyDirToAll}
+                    onChange={(e) => setApplyDirToAll(e.target.checked)}
+                    className="w-3 h-3 rounded accent-indigo-500 cursor-pointer"
+                  />
+                  <span className="text-slate-500 group-hover/toggle:text-slate-300 text-xs transition-colors">
+                    Same location for all
+                  </span>
+                </label>
+              )}
+            </div>
+
+            {applyDirToAll && activeGroups.length > 1 && (
+              <div className="flex items-center gap-2 mb-3 p-3 bg-slate-800/60 border border-indigo-500/30 rounded-xl">
+                <div
+                  className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-300 truncate min-w-0 cursor-default"
+                  title={saveDirectory}
+                >
+                  {saveDirectory || (
+                    <span className="text-slate-500 italic">
+                      No folder selected
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleChooseDirForAll}
+                  className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                >
+                  Browse…
+                </button>
+              </div>
+            )}
+
             <div className="space-y-3">
               {activeGroups.map((group) => {
                 const of_ = activeOutputFiles.find(
                   (f) => f.groupId === group.id,
                 );
                 if (!of_) return null;
+                const dir = outputDirs[group.id] ?? "";
 
                 return (
                   <div
@@ -215,6 +252,7 @@ export function OutputConfig() {
                     className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4"
                     style={{ borderLeftColor: group.color, borderLeftWidth: 3 }}
                   >
+                    {/* Group label row */}
                     <div className="flex items-center gap-3 mb-3">
                       <div
                         className="w-3 h-3 rounded-full flex-shrink-0"
@@ -228,7 +266,9 @@ export function OutputConfig() {
                         {indicesToRangeString(group.pageIndices)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+
+                    {/* Filename */}
+                    <div className="flex items-center gap-2 mb-2">
                       <input
                         type="text"
                         value={of_.outputFileName}
@@ -242,9 +282,33 @@ export function OutputConfig() {
                       />
                       <span className="text-slate-500 text-sm">.pdf</span>
                     </div>
-                    {saveDirectory && (
+
+                    {/* Save location — hidden per-card when "apply to all" is active */}
+                    {!applyDirToAll && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div
+                          className="flex-1 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-400 truncate min-w-0 cursor-default"
+                          title={dir}
+                        >
+                          {dir || (
+                            <span className="text-slate-600 italic">
+                              No folder selected
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleChooseDir(group.id)}
+                          className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-400 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                        >
+                          Browse…
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Full output path preview */}
+                    {dir && (
                       <div className="mt-1.5 text-slate-600 text-xs font-mono truncate">
-                        {saveDirectory}/{of_.outputFileName || "…"}.pdf
+                        {dir}/{of_.outputFileName || "…"}.pdf
                       </div>
                     )}
                   </div>
