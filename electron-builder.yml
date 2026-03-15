@@ -10,7 +10,8 @@ files:
 
 win:
   requestedExecutionLevel: asInvoker
-  publisherName: PDF Decomposer
+  signtoolOptions:
+    publisherName: PDF Decomposer
   target:
     - target: nsis
       arch:
