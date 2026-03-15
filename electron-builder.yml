@@ -41,6 +41,7 @@ mac:
         - x64
         - arm64
   category: public.app-category.productivity
+  icon: resources/icon.icns
 
 dmg:
   artifactName: PDFDecomposer-${version}-${arch}.dmg
