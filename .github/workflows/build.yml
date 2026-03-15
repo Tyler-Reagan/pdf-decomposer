@@ -49,6 +49,12 @@ jobs:
           $icon.Dispose()
           $bmp.Dispose()
 
+      - name: Create placeholder icon (Linux)
+        if: matrix.platform == 'linux' && !hashFiles('resources/icon.png')
+        run: |
+          mkdir -p resources
+          convert -size 256x256 xc:'#6366F1' resources/icon.png
+
       - name: Install dependencies
         run: npm ci
 

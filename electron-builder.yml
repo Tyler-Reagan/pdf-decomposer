@@ -51,6 +51,7 @@ linux:
       arch:
         - x64
   category: Utility
+  icon: resources/icon.png
 
 appImage:
   artifactName: PDFDecomposer-${version}.AppImage
