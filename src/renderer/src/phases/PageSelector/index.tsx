@@ -23,6 +23,7 @@ export function PageSelector() {
 
   const [webviewPage, setWebviewPage] = useState(0);
   const [nodeGridFlex, setNodeGridFlex] = useState(NODE_GRID_FLEX_DEFAULT);
+  const [isLassoing, setIsLassoing] = useState(false);
 
   const [lasso, setLasso] = useState<{
     x: number;
@@ -37,6 +38,8 @@ export function PageSelector() {
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const webviewPanelRef = useRef<HTMLDivElement>(null);
   const nodeGridPanelRef = useRef<HTMLDivElement>(null);
+  const autoScrollRafRef = useRef<number | null>(null);
+  const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const stableNodeRefCallbacks = useRef<
     Map<number, (el: HTMLDivElement | null) => void>
@@ -105,6 +108,8 @@ export function PageSelector() {
   useEffect(
     () => () => {
       if (webviewNavTimer.current) clearTimeout(webviewNavTimer.current);
+      if (autoScrollRafRef.current !== null)
+        cancelAnimationFrame(autoScrollRafRef.current);
     },
     [],
   );
@@ -143,6 +148,7 @@ export function PageSelector() {
         y: e.clientY - rect.top + el.scrollTop,
       };
       isDraggingLasso.current = false;
+      setIsLassoing(true);
 
       if (selectedPageIndices.has(pageIndex)) {
         const next = new Set(selectedPageIndices);
@@ -163,14 +169,15 @@ export function PageSelector() {
     [],
   );
 
-  const handleGridMouseMove = useCallback(
-    (e: React.MouseEvent) => {
+  // Shared lasso hit-test — called from both mouse-move and the auto-scroll RAF.
+  const applyLasso = useCallback(
+    (clientX: number, clientY: number) => {
       if (!lassoOriginRef.current) return;
       const el = scrollContainerRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const curX = e.clientX - rect.left + el.scrollLeft;
-      const curY = e.clientY - rect.top + el.scrollTop;
+      const curX = clientX - rect.left + el.scrollLeft;
+      const curY = clientY - rect.top + el.scrollTop;
       const ox = lassoOriginRef.current.x;
       const oy = lassoOriginRef.current.y;
 
@@ -205,14 +212,66 @@ export function PageSelector() {
         setSelectedPageIndices(selected);
       }
     },
-    [setSelectedPageIndices],
+    [setLasso, setSelectedPageIndices],
+  );
+
+  const stopAutoScroll = useCallback(() => {
+    if (autoScrollRafRef.current !== null) {
+      cancelAnimationFrame(autoScrollRafRef.current);
+      autoScrollRafRef.current = null;
+    }
+  }, []);
+
+  const startAutoScroll = useCallback(() => {
+    if (autoScrollRafRef.current !== null) return; // already ticking
+    const ZONE = 96; // px from edge where scrolling begins
+    const MAX_SPEED = 14; // px per frame at edge
+
+    const tick = () => {
+      const el = scrollContainerRef.current;
+      if (!el || !isDraggingLasso.current) {
+        autoScrollRafRef.current = null;
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const { y: clientY } = mousePositionRef.current;
+      const distBottom = rect.bottom - clientY;
+      const distTop = clientY - rect.top;
+
+      let delta = 0;
+      if (distBottom < ZONE && distBottom >= 0)
+        delta = Math.round(MAX_SPEED * (1 - distBottom / ZONE));
+      else if (distTop < ZONE && distTop >= 0)
+        delta = -Math.round(MAX_SPEED * (1 - distTop / ZONE));
+
+      if (delta !== 0) {
+        el.scrollTop += delta;
+        applyLasso(mousePositionRef.current.x, mousePositionRef.current.y);
+        autoScrollRafRef.current = requestAnimationFrame(tick);
+      } else {
+        autoScrollRafRef.current = null;
+      }
+    };
+    autoScrollRafRef.current = requestAnimationFrame(tick);
+  }, [applyLasso]);
+
+  const handleGridMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      mousePositionRef.current = { x: e.clientX, y: e.clientY };
+      if (!lassoOriginRef.current) return;
+      applyLasso(e.clientX, e.clientY);
+      if (isDraggingLasso.current) startAutoScroll();
+    },
+    [applyLasso, startAutoScroll],
   );
 
   const handleGridMouseUp = useCallback(() => {
+    stopAutoScroll();
     lassoOriginRef.current = null;
     isDraggingLasso.current = false;
+    setIsLassoing(false);
     setLasso(null);
-  }, []);
+  }, [stopAutoScroll]);
 
   const canContinue =
     groups.length > 0 && groups.some((g) => g.pageIndices.length > 0);
@@ -334,7 +393,7 @@ export function PageSelector() {
             onMouseLeave={handleGridMouseUp}
           >
             <div
-              className="grid gap-2 p-3"
+              className={`grid gap-2 p-3 ${selectedPageIndices.size > 0 ? "pb-52" : ""}`}
               style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
             >
               {Array.from({ length: totalPages }, (_, i) => (
@@ -364,7 +423,9 @@ export function PageSelector() {
             )}
           </div>
 
-          <FloatingActionBar visible={selectedPageIndices.size > 0} />
+          <FloatingActionBar
+            visible={selectedPageIndices.size > 0 && !isLassoing}
+          />
         </div>
 
         {/* ── Group panel ─────────────────────────────────────────────── */}
