@@ -28,6 +28,8 @@ export function OutputConfig() {
   // per-groupId save directory; initialized from the store's last-used saveDirectory
   const [outputDirs, setOutputDirs] = useState<Record<string, string>>({});
   const [applyDirToAll, setApplyDirToAll] = useState(false);
+  // groupIds that have opted out of applyDirToAll and use their own directory
+  const [dirOverrides, setDirOverrides] = useState<Set<string>>(new Set());
 
   const activeGroups = groups.filter((g) => g.pageIndices.length > 0);
   const activeOutputFiles = outputFiles.filter((f) =>
@@ -42,7 +44,7 @@ export function OutputConfig() {
       .filter((g) => g.pageIndices.length > 0)
       .map((g) => ({
         groupId: g.id,
-        outputFileName: sanitizeFileName(`${baseName}_${g.name}`),
+        outputFileName: sanitizeFileName(g.name),
         outputFilePath: "",
       }));
     setOutputFiles(initialFiles);
@@ -55,6 +57,20 @@ export function OutputConfig() {
       });
     setOutputDirs(initialDirs);
   }, []); // Only on mount
+
+  const getEffectiveDir = (groupId: string): string => {
+    if (applyDirToAll && !dirOverrides.has(groupId)) return saveDirectory;
+    return outputDirs[groupId] ?? "";
+  };
+
+  const toggleDirOverride = (groupId: string) => {
+    setDirOverrides((prev) => {
+      const next = new Set(prev);
+      if (next.has(groupId)) next.delete(groupId);
+      else next.add(groupId);
+      return next;
+    });
+  };
 
   const setOutputDir = (groupId: string, dir: string) => {
     setOutputDirs((prev) => ({ ...prev, [groupId]: dir }));
@@ -90,7 +106,7 @@ export function OutputConfig() {
       const fileName = of_.outputFileName.endsWith(".pdf")
         ? of_.outputFileName
         : `${of_.outputFileName}.pdf`;
-      const dir = outputDirs[g.id] ?? "";
+      const dir = getEffectiveDir(g.id);
       return {
         groupId: g.id,
         outputPath: `${dir}/${fileName}`.replace(/\/\//g, "/"),
@@ -124,7 +140,8 @@ export function OutputConfig() {
   };
 
   const canStart =
-    activeGroups.length > 0 && activeGroups.every((g) => outputDirs[g.id]);
+    activeGroups.length > 0 &&
+    activeGroups.every((g) => !!getEffectiveDir(g.id));
 
   if (!loadedPdf) {
     setPhase("drop");
@@ -207,7 +224,10 @@ export function OutputConfig() {
                   <input
                     type="checkbox"
                     checked={applyDirToAll}
-                    onChange={(e) => setApplyDirToAll(e.target.checked)}
+                    onChange={(e) => {
+                      setApplyDirToAll(e.target.checked);
+                      if (!e.target.checked) setDirOverrides(new Set());
+                    }}
                     className="w-3 h-3 rounded accent-indigo-500 cursor-pointer"
                   />
                   <span className="text-slate-500 group-hover/toggle:text-slate-300 text-xs transition-colors">
@@ -244,7 +264,9 @@ export function OutputConfig() {
                   (f) => f.groupId === group.id,
                 );
                 if (!of_) return null;
-                const dir = outputDirs[group.id] ?? "";
+                const isOverride = dirOverrides.has(group.id);
+                const effectiveDir = getEffectiveDir(group.id);
+                const showDirPicker = !applyDirToAll || isOverride;
 
                 return (
                   <div
@@ -283,14 +305,29 @@ export function OutputConfig() {
                       <span className="text-slate-500 text-sm">.pdf</span>
                     </div>
 
-                    {/* Save location — hidden per-card when "apply to all" is active */}
-                    {!applyDirToAll && (
+                    {/* Save location override toggle — only shown when "same location for all" is active */}
+                    {applyDirToAll && (
+                      <label className="flex items-center gap-2 mt-2 mb-1 cursor-pointer select-none group/override w-fit">
+                        <input
+                          type="checkbox"
+                          checked={isOverride}
+                          onChange={() => toggleDirOverride(group.id)}
+                          className="w-3.5 h-3.5 rounded accent-indigo-500 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-500 mb-1 group-hover/override:text-slate-300 transition-colors">
+                          Save to a different folder than the others
+                        </span>
+                      </label>
+                    )}
+
+                    {/* Save location picker — shown when not using shared dir, or when overriding */}
+                    {showDirPicker && (
                       <div className="flex items-center gap-2 mt-1">
                         <div
                           className="flex-1 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-400 truncate min-w-0 cursor-default"
-                          title={dir}
+                          title={outputDirs[group.id] ?? ""}
                         >
-                          {dir || (
+                          {outputDirs[group.id] || (
                             <span className="text-slate-600 italic">
                               No folder selected
                             </span>
@@ -306,9 +343,9 @@ export function OutputConfig() {
                     )}
 
                     {/* Full output path preview */}
-                    {dir && (
+                    {effectiveDir && (
                       <div className="mt-1.5 text-slate-600 text-xs font-mono truncate">
-                        {dir}/{of_.outputFileName || "…"}.pdf
+                        {effectiveDir}/{of_.outputFileName || "…"}.pdf
                       </div>
                     )}
                   </div>
