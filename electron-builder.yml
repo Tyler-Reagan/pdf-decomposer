@@ -1,6 +1,12 @@
 appId: com.pdfdecomposer.app
 productName: PDF Decomposer
 copyright: Copyright © 2025 PDF Decomposer
+publish:
+  provider: github
+  owner: Tyler-Reagan
+  repo: pdf-decomposer
+  draft: false
+  prerelease: false
 directories:
   buildResources: resources
   output: dist
