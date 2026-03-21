@@ -4,6 +4,7 @@ import { DropZone } from "./phases/DropZone";
 import { PageSelector } from "./phases/PageSelector";
 import { OutputConfig } from "./phases/OutputConfig";
 import { Processing, Complete, ErrorScreen } from "./phases/Processing";
+import { UpdateBanner } from "./components/UpdateBanner";
 
 export function App() {
   const phase = usePdfStore((s) => s.phase);
@@ -15,6 +16,7 @@ export function App() {
         className="flex-shrink-0 w-full"
         style={{ height: 38, WebkitAppRegion: "drag" } as React.CSSProperties}
       />
+      <UpdateBanner />
       {/* Phase content fills remaining space */}
       <div className="flex-1 relative overflow-hidden">
         <AnimatePresence mode="wait">

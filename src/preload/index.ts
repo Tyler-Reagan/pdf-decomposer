@@ -26,6 +26,17 @@ export interface SplitProgressEvent {
   done?: boolean;
 }
 
+export interface UpdateInfo {
+  version: string;
+  releaseDate?: string;
+}
+
+export interface DownloadProgress {
+  percent: number;
+  transferred: number;
+  total: number;
+}
+
 const api = {
   openPdfDialog: (): Promise<string | null> =>
     ipcRenderer.invoke("open-pdf-dialog"),
@@ -60,6 +71,35 @@ const api = {
     ipcRenderer.on("split-progress", handler);
     return () => ipcRenderer.removeListener("split-progress", handler);
   },
+
+  onUpdateAvailable: (callback: (info: UpdateInfo) => void): (() => void) => {
+    const handler = (_: Electron.IpcRendererEvent, info: UpdateInfo): void =>
+      callback(info);
+    ipcRenderer.on("update-available", handler);
+    return () => ipcRenderer.removeListener("update-available", handler);
+  },
+
+  onUpdateProgress: (
+    callback: (progress: DownloadProgress) => void,
+  ): (() => void) => {
+    const handler = (
+      _: Electron.IpcRendererEvent,
+      progress: DownloadProgress,
+    ): void => callback(progress);
+    ipcRenderer.on("update-progress", handler);
+    return () => ipcRenderer.removeListener("update-progress", handler);
+  },
+
+  onUpdateDownloaded: (callback: (info: UpdateInfo) => void): (() => void) => {
+    const handler = (_: Electron.IpcRendererEvent, info: UpdateInfo): void =>
+      callback(info);
+    ipcRenderer.on("update-downloaded", handler);
+    return () => ipcRenderer.removeListener("update-downloaded", handler);
+  },
+
+  downloadUpdate: (): Promise<void> => ipcRenderer.invoke("download-update"),
+
+  installUpdate: (): void => ipcRenderer.send("install-update"),
 };
 
 if (process.contextIsolated) {

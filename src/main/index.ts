@@ -1,6 +1,7 @@
 import { app, shell, BrowserWindow, nativeTheme } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import { autoUpdater } from "electron-updater";
 import { registerIpcHandlers } from "./ipc";
 
 function createWindow(): void {
@@ -47,6 +48,31 @@ function createWindow(): void {
 // Force dark theme so native OS dialogs (file/folder pickers) use dark styling
 nativeTheme.themeSource = "dark";
 
+function setupAutoUpdater(): void {
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-available", (info) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send("update-available", info);
+  });
+
+  autoUpdater.on("download-progress", (progress) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send("update-progress", progress);
+  });
+
+  autoUpdater.on("update-downloaded", (info) => {
+    BrowserWindow.getAllWindows()[0]?.webContents.send("update-downloaded", info);
+  });
+
+  autoUpdater.on("error", (err) => {
+    console.error("Auto-updater error:", err.message);
+  });
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error("Update check failed:", err.message);
+  });
+}
+
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.pdfdecomposer");
 
@@ -56,6 +82,10 @@ app.whenReady().then(() => {
 
   registerIpcHandlers();
   createWindow();
+
+  if (!is.dev) {
+    setupAutoUpdater();
+  }
 
   app.on("activate", function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
