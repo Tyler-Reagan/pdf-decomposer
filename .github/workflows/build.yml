@@ -19,8 +19,6 @@ jobs:
             platform: linux
 
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
@@ -50,20 +48,77 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and publish (Windows)
+      - name: Build (Windows)
         if: matrix.platform == 'win'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist -- --win --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
+        run: npm run dist -- --win --publish never
 
-      - name: Build and publish (macOS)
+      - name: Build (macOS)
         if: matrix.platform == 'mac'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist -- --mac --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
+        run: npm run dist -- --mac --publish never
 
-      - name: Build and publish (Linux)
+      - name: Build (Linux)
         if: matrix.platform == 'linux'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist -- --linux --publish ${{ startsWith(github.ref, 'refs/tags/') && 'always' || 'never' }}
+        run: npm run dist -- --linux --publish never
+
+      - name: Generate latest.yml (Windows)
+        if: matrix.platform == 'win'
+        run: node scripts/generate-latest-yml.cjs win
+
+      - name: Generate latest-mac.yml (macOS)
+        if: matrix.platform == 'mac'
+        run: node scripts/generate-latest-yml.cjs mac
+
+      - name: Generate latest-linux.yml (Linux)
+        if: matrix.platform == 'linux'
+        run: node scripts/generate-latest-yml.cjs linux
+
+      - name: Upload artifacts (Windows)
+        if: matrix.platform == 'win'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-win
+          path: |
+            dist/PDFDecomposer-Setup-*.exe
+            dist/PDFDecomposer-portable.exe
+            dist/latest.yml
+          if-no-files-found: error
+
+      - name: Upload artifacts (macOS)
+        if: matrix.platform == 'mac'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-mac
+          path: |
+            dist/PDFDecomposer-*.dmg
+            dist/latest-mac.yml
+          if-no-files-found: error
+
+      - name: Upload artifacts (Linux)
+        if: matrix.platform == 'linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-linux
+          path: |
+            dist/PDFDecomposer-*.AppImage
+            dist/latest-linux.yml
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
+          generate_release_notes: true

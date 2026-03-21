@@ -49,6 +49,11 @@ function createWindow(): void {
 nativeTheme.themeSource = "dark";
 
 function setupAutoUpdater(): void {
+  autoUpdater.setFeedURL({
+    provider: "github",
+    owner: "Tyler-Reagan",
+    repo: "pdf-decomposer",
+  });
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = true;
 
