@@ -13,11 +13,18 @@ export interface LoadedPdf {
   fileSizeBytes: number;
 }
 
+export interface MetaGroup {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export interface PageGroup {
   id: string;
   name: string;
   color: string;
   pageIndices: number[]; // 0-based, may be non-contiguous
+  metaGroupId: string | null;
 }
 
 export interface OutputFile {

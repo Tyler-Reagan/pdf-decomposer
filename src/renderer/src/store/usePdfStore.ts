@@ -1,10 +1,19 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import type { AppPhase, LoadedPdf, PageGroup, OutputFile } from "../types/pdf";
+import type {
+  AppPhase,
+  LoadedPdf,
+  PageGroup,
+  OutputFile,
+  MetaGroup,
+} from "../types/pdf";
 import { GROUP_COLORS } from "../types/pdf";
 
 let groupIdCounter = 0;
 const nextGroupId = (): string => `group-${++groupIdCounter}`;
+
+let metaGroupIdCounter = 0;
+const nextMetaGroupId = (): string => `meta-group-${++metaGroupIdCounter}`;
 
 interface PdfStore {
   // Phase
@@ -29,6 +38,16 @@ interface PdfStore {
   assignPagesToGroup: (groupId: string, pageIndices: number[]) => void;
   unassignPages: (pageIndices: number[]) => void;
   getGroupForPage: (pageIndex: number) => PageGroup | undefined;
+
+  // Meta groups
+  metaGroups: MetaGroup[];
+  addMetaGroup: (name?: string) => MetaGroup;
+  removeMetaGroup: (id: string) => void;
+  updateMetaGroup: (
+    id: string,
+    updates: Partial<Omit<MetaGroup, "id">>,
+  ) => void;
+  setGroupMetaGroup: (groupId: string, metaGroupId: string | null) => void;
 
   // Output config
   outputFiles: OutputFile[];
@@ -61,6 +80,7 @@ const initialState = {
   loadedPdf: null,
   selectedPageIndices: new Set<number>(),
   groups: [],
+  metaGroups: [],
   outputFiles: [],
   saveDirectory: "",
   processingProgress: 0,
@@ -83,6 +103,7 @@ export const usePdfStore = create<PdfStore>()(
       set((s) => {
         s.loadedPdf = pdf;
         s.groups = [];
+        s.metaGroups = [];
         s.selectedPageIndices = new Set();
         s.outputFiles = [];
         s.saveDirectory = "";
@@ -114,6 +135,7 @@ export const usePdfStore = create<PdfStore>()(
         name: name ?? `Output ${existingCount + 1}`,
         color,
         pageIndices: [],
+        metaGroupId: null,
       };
       set((s) => {
         s.groups.push(group);
@@ -123,7 +145,6 @@ export const usePdfStore = create<PdfStore>()(
 
     removeGroup: (id) =>
       set((s) => {
-        // Remove group and unassign its pages (pages stay in PDF, just become unassigned)
         s.groups = s.groups.filter((g) => g.id !== id);
       }),
 
@@ -157,6 +178,42 @@ export const usePdfStore = create<PdfStore>()(
     getGroupForPage: (pageIndex) => {
       return get().groups.find((g) => g.pageIndices.includes(pageIndex));
     },
+
+    addMetaGroup: (name) => {
+      const existingCount = get().metaGroups.length;
+      // Offset from group colors so meta groups get visually distinct defaults
+      const color = GROUP_COLORS[(existingCount + 4) % GROUP_COLORS.length];
+      const metaGroup: MetaGroup = {
+        id: nextMetaGroupId(),
+        name: name ?? `Meta Group ${existingCount + 1}`,
+        color,
+      };
+      set((s) => {
+        s.metaGroups.push(metaGroup);
+      });
+      return metaGroup;
+    },
+
+    removeMetaGroup: (id) =>
+      set((s) => {
+        s.metaGroups = s.metaGroups.filter((mg) => mg.id !== id);
+        // Unassign all groups from this meta group
+        for (const g of s.groups) {
+          if (g.metaGroupId === id) g.metaGroupId = null;
+        }
+      }),
+
+    updateMetaGroup: (id, updates) =>
+      set((s) => {
+        const mg = s.metaGroups.find((mg) => mg.id === id);
+        if (mg) Object.assign(mg, updates);
+      }),
+
+    setGroupMetaGroup: (groupId, metaGroupId) =>
+      set((s) => {
+        const g = s.groups.find((g) => g.id === groupId);
+        if (g) g.metaGroupId = metaGroupId;
+      }),
 
     setOutputFiles: (files) =>
       set((s) => {
@@ -193,6 +250,10 @@ export const usePdfStore = create<PdfStore>()(
       }),
 
     reset: () =>
-      set(() => ({ ...initialState, selectedPageIndices: new Set<number>() })),
+      set(() => ({
+        ...initialState,
+        selectedPageIndices: new Set<number>(),
+        metaGroups: [],
+      })),
   })),
 );
