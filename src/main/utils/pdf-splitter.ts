@@ -1,5 +1,6 @@
 import { PDFDocument } from "pdf-lib";
 import * as fs from "fs";
+import * as path from "path";
 import { BrowserWindow } from "electron";
 
 export interface SplitGroup {
@@ -19,12 +20,22 @@ export interface SplitPdfResult {
   error?: string;
 }
 
+function assertSafePdfPath(filePath: string, label: string): void {
+  if (filePath.includes("\0")) throw new Error(`Invalid ${label}`);
+  if (path.extname(filePath).toLowerCase() !== ".pdf") {
+    throw new Error(`${label} must be a .pdf file`);
+  }
+}
+
 export async function splitPdf(
   params: SplitPdfParams,
 ): Promise<SplitPdfResult> {
   const { sourcePath, groups } = params;
 
   try {
+    assertSafePdfPath(sourcePath, "source path");
+    for (const g of groups) assertSafePdfPath(g.outputPath, "output path");
+
     const sourceBytes = fs.readFileSync(sourcePath);
     const sourcePdf = await PDFDocument.load(sourceBytes);
     const totalGroups = groups.length;

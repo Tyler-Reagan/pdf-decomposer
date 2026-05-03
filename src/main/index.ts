@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, nativeTheme } from "electron";
+import { app, shell, BrowserWindow, nativeTheme, session } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import { autoUpdater } from "electron-updater";
@@ -22,6 +22,8 @@ function createWindow(): void {
     },
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
+      // sandbox must stay false so the preload script can use Node APIs;
+      // contextIsolation keeps the renderer isolated despite this.
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
@@ -71,10 +73,24 @@ function setupAutoUpdater(): void {
 
   autoUpdater.on("error", (err) => {
     console.error("Auto-updater error:", err.message);
+    BrowserWindow.getAllWindows()[0]?.webContents.send("update-error", err.message);
   });
 
   autoUpdater.checkForUpdates().catch((err) => {
     console.error("Update check failed:", err.message);
+  });
+}
+
+function setupCSP(): void {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'",
+        ],
+      },
+    });
   });
 }
 
@@ -90,6 +106,7 @@ app.whenReady().then(() => {
 
   if (!is.dev) {
     setupAutoUpdater();
+    setupCSP();
   }
 
   app.on("activate", function () {

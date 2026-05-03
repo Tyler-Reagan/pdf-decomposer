@@ -32,7 +32,7 @@ nsis:
   createStartMenuShortcut: true
 
 portable:
-  artifactName: PDFDecomposer-portable.exe
+  artifactName: PDFDecomposer-${version}-portable.exe
 
 mac:
   target:

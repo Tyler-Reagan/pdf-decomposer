@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { UpdateInfo, DownloadProgress } from "../../../preload/index";
 
-type BannerState = "available" | "downloading" | "downloaded";
+type BannerState = "available" | "downloading" | "downloaded" | "error";
 
 const RELEASES_URL =
   "https://github.com/Tyler-Reagan/pdf-decomposer/releases/latest";
@@ -37,10 +37,15 @@ export function UpdateBanner() {
       setState("downloaded");
     });
 
+    const offError = window.electronAPI.onUpdateError(() => {
+      setState("error");
+    });
+
     return () => {
       offAvailable();
       offProgress();
       offDownloaded();
+      offError();
     };
   }, []);
 
@@ -52,6 +57,12 @@ export function UpdateBanner() {
       window.electronAPI.downloadUpdate();
       setState("downloading");
     }
+  }
+
+  function handleRetry() {
+    setState("available");
+    window.electronAPI.downloadUpdate();
+    setState("downloading");
   }
 
   function handleInstall() {
@@ -71,15 +82,17 @@ export function UpdateBanner() {
           transition={{ duration: 0.2 }}
           className="flex-shrink-0 overflow-hidden"
         >
-          <div className="flex items-center gap-3 px-4 py-2 bg-blue-950/80 border-b border-blue-500/20 text-sm">
+          <div className={`flex items-center gap-3 px-4 py-2 border-b text-sm ${state === "error" ? "bg-red-950/80 border-red-500/20" : "bg-blue-950/80 border-blue-500/20"}`}>
             {/* Status dot */}
             <span
               className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                 state === "downloaded"
                   ? "bg-green-400"
-                  : state === "downloading"
-                    ? "bg-blue-400 animate-pulse"
-                    : "bg-blue-400"
+                  : state === "error"
+                    ? "bg-red-400"
+                    : state === "downloading"
+                      ? "bg-blue-400 animate-pulse"
+                      : "bg-blue-400"
               }`}
             />
 
@@ -90,9 +103,13 @@ export function UpdateBanner() {
                   <span className="text-white font-medium">
                     v{version} available
                   </span>
-                  {isMac && (
-                    <span className="text-slate-400"> — download to update</span>
-                  )}
+                  {isMac ? (
+                    <span className="text-slate-400">
+                      {" "}
+                      — opens GitHub releases. If Gatekeeper blocks the app,
+                      right-click the DMG and choose Open.
+                    </span>
+                  ) : null}
                 </>
               )}
               {state === "downloading" && (
@@ -114,6 +131,11 @@ export function UpdateBanner() {
                   v{version} ready to install
                 </span>
               )}
+              {state === "error" && (
+                <span className="text-red-300">
+                  Update failed — check your connection
+                </span>
+              )}
             </span>
 
             {/* Actions */}
@@ -132,6 +154,14 @@ export function UpdateBanner() {
                   className="px-2.5 py-0.5 rounded bg-green-600 hover:bg-green-500 text-white text-xs font-medium transition-colors cursor-pointer"
                 >
                   Restart &amp; Install
+                </button>
+              )}
+              {state === "error" && (
+                <button
+                  onClick={handleRetry}
+                  className="px-2.5 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-medium transition-colors cursor-pointer"
+                >
+                  Retry
                 </button>
               )}
               {state !== "downloading" && (
