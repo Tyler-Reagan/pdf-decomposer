@@ -28,7 +28,7 @@ export function GroupPanel() {
   const ungroupedGroups = groups.filter((g) => g.metaGroupId === null);
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" data-tour="group-panel-inner">
       <div className="px-4 pt-4 pb-2">
         <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
           Output Files
@@ -271,7 +271,7 @@ function MetaGroupSection({
         {/* Color swatch */}
         <div className="relative flex-shrink-0">
           <button
-            className="w-5 h-5 rounded-full border-2 border-slate-600 focus:outline-none"
+            className="w-5 h-5 rounded-full border-2 border-slate-600 focus:outline-none cursor-pointer hover:scale-110 transition-transform duration-150"
             style={{ backgroundColor: metaGroup.color }}
             onClick={() => setShowColorPicker((v) => !v)}
             title="Change color"
@@ -519,7 +519,7 @@ function GroupCard({
         {/* Color swatch */}
         <div className="relative flex-shrink-0">
           <button
-            className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer hover:scale-110 transition-transform duration-150"
             style={{ backgroundColor: group.color }}
             onClick={(e) => {
               e.stopPropagation();

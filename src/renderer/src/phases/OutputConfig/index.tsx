@@ -260,7 +260,7 @@ export function OutputConfig() {
       <div className="flex items-center px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
         <button
           onClick={() => setPhase("selecting")}
-          className="text-slate-500 hover:text-slate-300 transition-colors mr-4"
+          className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer mr-4"
         >
           <svg
             width="20"
@@ -318,6 +318,7 @@ export function OutputConfig() {
         {/* ── Config panel ─────────────────────────────────────────────── */}
         <div
           ref={configPanelRef}
+          data-tour="output-config"
           className="flex flex-col min-h-0"
           style={{ flex: configPanelFlex, minWidth: 0 }}
         >
@@ -444,7 +445,7 @@ export function OutputConfig() {
                             onClick={() =>
                               handleChooseMetaGroupDir(metaGroup.id)
                             }
-                            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
                           >
                             Browse…
                           </button>
@@ -526,7 +527,7 @@ export function OutputConfig() {
                       </div>
                       <button
                         onClick={handleChooseDirForAll}
-                        className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
                       >
                         Browse…
                       </button>
@@ -604,6 +605,7 @@ export function OutputConfig() {
               {activeGroups.length !== 1 ? "s" : ""} will be created
             </div>
             <Button
+              data-tour="process-btn"
               variant="primary"
               size="lg"
               disabled={!canStart || isProcessing}
@@ -718,7 +720,7 @@ function GroupOutputCard({
           </div>
           <button
             onClick={onChooseDir}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-400 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+            className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-400 hover:text-white text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
           >
             Browse…
           </button>

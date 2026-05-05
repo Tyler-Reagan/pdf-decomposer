@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
+import { Zap, Layers, Scissors } from "lucide-react";
 import { usePdfStore } from "../../store/usePdfStore";
-import { formatBytes } from "../../types/pdf";
 
 export function DropZone() {
-  const { setLoadedPdf, setPhase, setError } = usePdfStore();
+  const { setLoadedPdf, setPhase, setError, setTourActive } = usePdfStore();
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,13 +73,14 @@ export function DropZone() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.4, ease: [0, 0, 0.2, 1] }}
         className="w-full max-w-2xl"
       >
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">
-            PDF Decomposer
+          <h1 className="text-4xl font-bold tracking-tight mb-2">
+            <span className="text-white">PDF </span>
+            <span className="text-indigo-400">Decomposer</span>
           </h1>
           <p className="text-slate-400 text-lg">
             Split any PDF into multiple files by page range
@@ -88,6 +89,7 @@ export function DropZone() {
 
         {/* Drop area */}
         <motion.div
+          data-tour="drop-zone"
           onDragOver={(e) => {
             e.preventDefault();
             setIsDragging(true);
@@ -96,16 +98,15 @@ export function DropZone() {
           onDrop={handleDrop}
           onClick={!isLoading ? handleFileSelect : undefined}
           animate={{
-            borderColor: isDragging ? "#6366f1" : "#334155",
+            borderColor: isDragging
+              ? "var(--color-accent)"
+              : "var(--color-border-strong)",
             backgroundColor: isDragging
-              ? "rgba(99,102,241,0.08)"
+              ? "var(--color-accent-hover)"
               : "rgba(15,23,42,0.6)",
           }}
-          className="border-2 border-dashed rounded-2xl p-16 flex flex-col items-center gap-5 cursor-pointer transition-all duration-200 select-none"
-          style={{
-            borderColor: "#334155",
-            backgroundColor: "rgba(15,23,42,0.6)",
-          }}
+          transition={{ duration: 0.15 }}
+          className="border-2 border-dashed rounded-2xl p-16 flex flex-col items-center gap-5 cursor-pointer select-none"
         >
           {isLoading ? (
             <LoadingSpinner />
@@ -128,38 +129,52 @@ export function DropZone() {
         </motion.div>
 
         {/* Features */}
-        <div className="grid grid-cols-3 gap-4 mt-10">
-          {[
-            {
-              icon: "⚡",
-              label: "Fully offline",
-              desc: "No data leaves your machine",
-            },
-            {
-              icon: "🎨",
-              label: "Visual selection",
-              desc: "See thumbnails of every page",
-            },
-            {
-              icon: "✂️",
-              label: "Non-contiguous",
-              desc: "Mix any pages into each output",
-            },
-          ].map((f) => (
+        <div className="grid grid-cols-3 gap-4 mt-8">
+          {FEATURES.map(({ Icon, label, desc }) => (
             <div
-              key={f.label}
-              className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50"
+              key={label}
+              className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50 cursor-default"
             >
-              <div className="text-2xl mb-2">{f.icon}</div>
-              <div className="text-white text-sm font-medium">{f.label}</div>
-              <div className="text-slate-500 text-xs mt-1">{f.desc}</div>
+              <div className="flex justify-center mb-2">
+                <Icon size={20} className="text-indigo-400" />
+              </div>
+              <div className="text-white text-sm font-medium">{label}</div>
+              <div className="text-slate-500 text-xs mt-1">{desc}</div>
             </div>
           ))}
+        </div>
+
+        {/* Tour link */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => setTourActive(true)}
+            className="text-slate-500 text-sm hover:text-indigo-400 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded px-1"
+          >
+            Take a tour →
+          </button>
         </div>
       </motion.div>
     </div>
   );
 }
+
+const FEATURES = [
+  {
+    Icon: Zap,
+    label: "Fully offline",
+    desc: "No data leaves your machine",
+  },
+  {
+    Icon: Layers,
+    label: "Visual selection",
+    desc: "See thumbnails of every page",
+  },
+  {
+    Icon: Scissors,
+    label: "Non-contiguous",
+    desc: "Mix any pages into each output",
+  },
+];
 
 function UploadIcon({ dragging }: { dragging: boolean }) {
   return (
@@ -173,7 +188,7 @@ function UploadIcon({ dragging }: { dragging: boolean }) {
         height="40"
         viewBox="0 0 24 24"
         fill="none"
-        stroke={dragging ? "#818cf8" : "#64748b"}
+        stroke={dragging ? "var(--color-accent)" : "#64748b"}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -193,7 +208,7 @@ function LoadingSpinner() {
       <motion.div
         className="w-12 h-12 border-4 border-slate-700 border-t-indigo-500 rounded-full"
         animate={{ rotate: 360 }}
-        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
       />
       <p className="text-slate-400">Reading PDF…</p>
     </div>

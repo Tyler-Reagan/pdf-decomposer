@@ -53,6 +53,7 @@ export interface ElectronAppAPI {
   onUpdateError(callback: (message: string) => void): () => void;
   downloadUpdate(): Promise<void>;
   installUpdate(): void;
+  getDemoPdfPath(): Promise<string>;
 }
 
 declare global {

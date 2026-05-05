@@ -107,6 +107,8 @@ const api = {
   downloadUpdate: (): Promise<void> => ipcRenderer.invoke("download-update"),
 
   installUpdate: (): void => ipcRenderer.send("install-update"),
+
+  getDemoPdfPath: (): Promise<string> => ipcRenderer.invoke("get-demo-pdf-path"),
 };
 
 if (process.contextIsolated) {

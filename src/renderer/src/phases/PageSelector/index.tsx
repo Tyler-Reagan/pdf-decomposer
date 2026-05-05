@@ -292,7 +292,7 @@ export function PageSelector() {
             clearSelection();
             setPhase("drop");
           }}
-          className="text-slate-500 hover:text-slate-300 transition-colors"
+          className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
           title="Back"
         >
           <svg
@@ -324,6 +324,7 @@ export function PageSelector() {
             variant="primary"
             disabled={!canContinue}
             onClick={() => setPhase("configuring")}
+            data-tour="configure-output-btn"
           >
             Configure Output
             <svg
@@ -387,6 +388,7 @@ export function PageSelector() {
 
           <div
             ref={scrollContainerRef}
+            data-tour="page-grid"
             className="flex-1 overflow-y-auto relative"
             onMouseMove={handleGridMouseMove}
             onMouseUp={handleGridMouseUp}
@@ -429,7 +431,7 @@ export function PageSelector() {
         </div>
 
         {/* ── Group panel ─────────────────────────────────────────────── */}
-        <div className="w-72 flex-shrink-0 border-l border-slate-700/60 bg-slate-900/80">
+        <div data-tour="group-panel" className="w-72 flex-shrink-0 border-l border-slate-700/60 bg-slate-900/80">
           <GroupPanel />
         </div>
       </div>

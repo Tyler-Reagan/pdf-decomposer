@@ -71,6 +71,12 @@ interface PdfStore {
   errorMessage: string;
   setError: (msg: string) => void;
 
+  // Tour
+  tourActive: boolean;
+  setTourActive: (active: boolean) => void;
+  tourStepIndex: number;
+  setTourStepIndex: (index: number) => void;
+
   // Reset
   reset: () => void;
 }
@@ -88,6 +94,8 @@ const initialState = {
   processingTotal: 0,
   outputFilePaths: [],
   errorMessage: "",
+  tourActive: false,
+  tourStepIndex: 0,
 };
 
 export const usePdfStore = create<PdfStore>()(
@@ -247,6 +255,16 @@ export const usePdfStore = create<PdfStore>()(
       set((s) => {
         s.errorMessage = msg;
         s.phase = "error";
+      }),
+
+    setTourActive: (active) =>
+      set((s) => {
+        s.tourActive = active;
+      }),
+
+    setTourStepIndex: (index) =>
+      set((s) => {
+        s.tourStepIndex = index;
       }),
 
     reset: () =>

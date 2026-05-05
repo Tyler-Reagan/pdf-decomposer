@@ -152,11 +152,12 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
+          data-tour="floating-bar"
           className="absolute bottom-4 left-3 right-3 z-30"
         >
           {renamingGroupId ? (
             /* ── Rename mode ───────────────────────────────────────────── */
-            <div className="bg-slate-800 border border-indigo-500/50 rounded-xl shadow-2xl overflow-hidden">
+            <div className="bg-slate-900/90 backdrop-blur-md border border-indigo-500/50 rounded-xl shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
                 <span className="text-slate-400 text-xs">Name this group</span>
                 <button
@@ -208,7 +209,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
             </div>
           ) : (
             /* ── Selection mode ────────────────────────────────────────── */
-            <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl overflow-hidden">
+            <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
                 <span className="text-slate-300 text-sm font-medium">

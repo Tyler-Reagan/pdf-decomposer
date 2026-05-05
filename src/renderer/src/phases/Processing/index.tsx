@@ -20,7 +20,7 @@ export function Processing() {
           <motion.div
             className="w-16 h-16 border-4 border-slate-700 border-t-indigo-500 rounded-full"
             animate={{ rotate: 360 }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
           />
         </div>
 
@@ -75,14 +75,19 @@ export function Complete() {
         </p>
 
         {/* File list */}
-        <div className="text-left space-y-2 mb-8">
+        <motion.div
+          className="text-left space-y-2 mb-8"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}
+        >
           {outputFilePaths.map((fp) => {
             const name = fp.replace(/\\/g, "/").split("/").pop() ?? fp;
             return (
               <motion.div
                 key={fp}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+                variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
                 className="flex items-center gap-3 bg-slate-800/60 border border-slate-700/50 rounded-lg px-4 py-3"
               >
                 <svg
@@ -102,7 +107,7 @@ export function Complete() {
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         <div className="flex items-center justify-center gap-4">
           <Button variant="secondary" onClick={reset}>
@@ -170,7 +175,7 @@ export function ErrorScreen() {
         <h2 className="text-white text-2xl font-semibold mb-3">
           Something went wrong
         </h2>
-        <p className="text-slate-400 mb-8 text-sm font-mono bg-slate-800 rounded-lg px-4 py-3 text-left break-all">
+        <p className="text-slate-400 mb-8 text-sm font-mono bg-slate-800 rounded-lg px-4 py-3 text-left break-all select-text cursor-text">
           {errorMessage}
         </p>
         <div className="flex items-center justify-center gap-4">

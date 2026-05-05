@@ -8,6 +8,10 @@ directories:
 files:
   - out/**/*
 
+extraResources:
+  - from: resources/demo.pdf
+    to: demo.pdf
+
 win:
   requestedExecutionLevel: asInvoker
   signtoolOptions:
