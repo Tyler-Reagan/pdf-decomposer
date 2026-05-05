@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { usePdfStore } from "./store/usePdfStore";
 import { DropZone } from "./phases/DropZone";
@@ -24,18 +24,54 @@ function useTheme() {
 
 export function App() {
   const phase = usePdfStore((s) => s.phase);
+  const groups = usePdfStore((s) => s.groups);
+  const reset = usePdfStore((s) => s.reset);
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
 
   const showTourButton = !tourActive && phase !== "drop";
+  const showHomeButton = phase !== "drop" && phase !== "processing";
+
+  const handleHome = useCallback(() => {
+    const hasWork = groups.some((g) => g.pageIndices.length > 0);
+    if (hasWork && !window.confirm("Load a different file? Your current groups will be lost.")) return;
+    reset();
+  }, [groups, reset]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-surf-2 text-ink-1 ring-1 ring-bdr/40">
       {/* Draggable title bar */}
       <div
-        className="flex-shrink-0 w-full flex items-center justify-end gap-1 pr-2"
+        className="flex-shrink-0 w-full flex items-center justify-between pr-2"
         style={{ height: 38, WebkitAppRegion: "drag" } as React.CSSProperties}
       >
+        {/* Left: home / load different file */}
+        <div className="flex items-center pl-20">
+          <AnimatePresence>
+            {showHomeButton && (
+              <motion.button
+                key="home-btn"
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -6 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleHome}
+                title="Load a different file"
+                style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+                className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-4 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Home</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Right: theme toggle + tour button */}
+        <div className="flex items-center gap-1">
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
@@ -80,6 +116,7 @@ export function App() {
             </motion.button>
           )}
         </AnimatePresence>
+        </div>
       </div>
 
       <UpdateBanner />
