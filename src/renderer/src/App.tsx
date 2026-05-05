@@ -22,12 +22,42 @@ function useTheme() {
   return { theme, toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")) };
 }
 
+const ZOOM_STEPS = [0.75, 0.85, 1.0, 1.15, 1.3, 1.5];
+const ZOOM_DEFAULT = 1.0;
+
+function useZoom() {
+  const [zoom, setZoom] = useState<number>(() => {
+    const saved = parseFloat(localStorage.getItem("zoom") ?? "");
+    return ZOOM_STEPS.includes(saved) ? saved : ZOOM_DEFAULT;
+  });
+
+  useEffect(() => {
+    (document.documentElement.style as CSSStyleDeclaration & { zoom: string }).zoom = String(zoom);
+    localStorage.setItem("zoom", String(zoom));
+  }, [zoom]);
+
+  const zoomIn = () => setZoom((z) => ZOOM_STEPS[Math.min(ZOOM_STEPS.indexOf(z) + 1, ZOOM_STEPS.length - 1)]);
+  const zoomOut = () => setZoom((z) => ZOOM_STEPS[Math.max(ZOOM_STEPS.indexOf(z) - 1, 0)]);
+  const zoomReset = () => setZoom(ZOOM_DEFAULT);
+
+  return {
+    zoom,
+    zoomIn,
+    zoomOut,
+    zoomReset,
+    canZoomIn: zoom < ZOOM_STEPS[ZOOM_STEPS.length - 1],
+    canZoomOut: zoom > ZOOM_STEPS[0],
+    isDefault: zoom === ZOOM_DEFAULT,
+  };
+}
+
 export function App() {
   const phase = usePdfStore((s) => s.phase);
   const groups = usePdfStore((s) => s.groups);
   const reset = usePdfStore((s) => s.reset);
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
+  const { zoom, zoomIn, zoomOut, zoomReset, canZoomIn, canZoomOut, isDefault } = useZoom();
 
   const showTourButton = !tourActive && phase !== "drop";
   const showHomeButton = phase !== "drop" && phase !== "processing";
@@ -68,6 +98,41 @@ export function App() {
               </motion.button>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Center: zoom controls */}
+        <div
+          className="flex items-center gap-0.5"
+          style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+        >
+          <button
+            onClick={zoomOut}
+            disabled={!canZoomOut}
+            title="Zoom out"
+            className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <button
+            onClick={isDefault ? undefined : zoomReset}
+            title={isDefault ? `Zoom: ${Math.round(zoom * 100)}%` : "Reset zoom"}
+            className={`h-6 px-1.5 rounded text-[10px] font-mono tabular-nums transition-colors duration-150 ${isDefault ? "text-ink-4 cursor-default" : "text-ink-2 hover:bg-surf-1 cursor-pointer"}`}
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={zoomIn}
+            disabled={!canZoomIn}
+            title="Zoom in"
+            className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
         </div>
 
         {/* Right: theme toggle + tour button */}
