@@ -19,13 +19,13 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white gap-4 p-8">
+        <div className="h-screen flex flex-col items-center justify-center bg-surf-2 text-ink-1 gap-4 p-8">
           <p className="text-red-400 font-medium">Something went wrong</p>
-          <p className="text-slate-400 text-sm text-center max-w-md">
+          <p className="text-ink-3 text-sm text-center max-w-md">
             {this.state.message}
           </p>
           <button
-            className="px-4 py-1.5 rounded bg-slate-700 hover:bg-slate-600 text-sm transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded bg-ctrl hover:bg-ctrl-hi text-sm transition-colors cursor-pointer text-ink-1"
             onClick={() => this.setState({ hasError: false, message: "" })}
           >
             Try again

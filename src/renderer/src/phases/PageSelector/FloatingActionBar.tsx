@@ -24,13 +24,11 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
 
   const selected = [...selectedPageIndices];
 
-  // Group that contains ALL currently selected pages — enables F2 rename
   const commonGroup =
     selected.length > 0
       ? groups.find((g) => selected.every((p) => g.pageIndices.includes(p)))
       : undefined;
 
-  // Whether any selected pages are currently in a group — controls Remove button
   const hasAssignedPages = groups.some((g) =>
     g.pageIndices.some((p) => selectedPageIndices.has(p)),
   );
@@ -67,7 +65,6 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
   );
 
   const handleRemoveFromGroups = useCallback(() => {
-    // Determine which groups will be fully emptied BEFORE mutating state
     const groupsToDelete = groups.filter(
       (g) =>
         g.pageIndices.length > 0 &&
@@ -85,7 +82,6 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
     clearSelection,
   ]);
 
-  // Auto-focus and select-all when rename mode opens
   useEffect(() => {
     if (renamingGroupId) {
       const t = setTimeout(() => renameInputRef.current?.select(), 30);
@@ -93,12 +89,10 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
     }
   }, [renamingGroupId]);
 
-  // Reset rename state when bar is dismissed
   useEffect(() => {
     if (!visible) setRenamingGroupId(null);
   }, [visible]);
 
-  // Keyboard shortcuts — suppressed when any input/textarea has focus
   useEffect(() => {
     if (!visible) return;
     const handler = (e: KeyboardEvent): void => {
@@ -156,13 +150,13 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
           className="absolute bottom-4 left-3 right-3 z-30"
         >
           {renamingGroupId ? (
-            /* ── Rename mode ───────────────────────────────────────────── */
-            <div className="bg-slate-900/90 backdrop-blur-md border border-indigo-500/50 rounded-xl shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
-                <span className="text-slate-400 text-xs">Name this group</span>
+            /* ── Rename mode ── */
+            <div className="bg-surf-2/90 backdrop-blur-md border border-acc/40 rounded-xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-bdr">
+                <span className="text-ink-3 text-xs">Name this group</span>
                 <button
                   onClick={cancelRename}
-                  className="text-slate-600 hover:text-slate-300 transition-colors"
+                  className="text-ink-4 hover:text-ink-2 transition-colors"
                   title="Cancel (Esc)"
                 >
                   <svg
@@ -185,40 +179,38 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
                   onKeyDown={(e) => {
-                    // Prevent window-level shortcuts from firing while typing
                     e.stopPropagation();
                     if (e.key === "Enter") confirmRename();
                     if (e.key === "Escape") cancelRename();
                   }}
                   placeholder="Group name…"
-                  className="w-full bg-slate-700 text-white text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-500"
+                  className="w-full bg-ctrl text-ink-1 text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-acc placeholder:text-ink-4"
                 />
               </div>
 
-              <div className="px-3 py-1.5 bg-slate-900/50 flex items-center justify-between">
-                <span className="text-slate-600 text-[10px]">
+              <div className="px-3 py-1.5 bg-surf-3/50 flex items-center justify-between">
+                <span className="text-ink-4 text-[10px]">
                   ↵ confirm · Esc cancel
                 </span>
                 <button
                   onClick={confirmRename}
-                  className="text-indigo-400 hover:text-indigo-300 text-[11px] font-medium transition-colors"
+                  className="text-acc hover:text-acc-hi text-[11px] font-medium transition-colors"
                 >
                   Save
                 </button>
               </div>
             </div>
           ) : (
-            /* ── Selection mode ────────────────────────────────────────── */
-            <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700/60 rounded-xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-700/50">
-                <span className="text-slate-300 text-sm font-medium">
+            /* ── Selection mode ── */
+            <div className="bg-surf-2/90 backdrop-blur-md border border-bdr-hi rounded-xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-bdr">
+                <span className="text-ink-2 text-sm font-medium">
                   {selected.length} page{selected.length !== 1 ? "s" : ""}{" "}
                   selected
                 </span>
                 <button
                   onClick={clearSelection}
-                  className="text-slate-600 hover:text-slate-300 transition-colors"
+                  className="text-ink-4 hover:text-ink-2 transition-colors"
                   title="Dismiss (Esc)"
                 >
                   <svg
@@ -235,23 +227,22 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                 </button>
               </div>
 
-              {/* Existing groups — click to assign */}
               {groups.length > 0 && (
                 <div className="px-2 py-1 flex flex-col gap-0.5 max-h-36 overflow-y-auto">
                   {groups.map((group) => (
                     <button
                       key={group.id}
                       onClick={() => handleAssignToGroup(group.id)}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700 transition-colors text-left w-full group/row"
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-ctrl transition-colors text-left w-full group/row"
                     >
                       <span
                         className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: group.color }}
                       />
-                      <span className="text-white text-xs font-medium truncate flex-1">
+                      <span className="text-ink-1 text-xs font-medium truncate flex-1">
                         {group.name}
                       </span>
-                      <span className="text-slate-600 text-[10px] flex-shrink-0 group-hover/row:text-slate-400 transition-colors">
+                      <span className="text-ink-4 text-[10px] flex-shrink-0 group-hover/row:text-ink-2 transition-colors">
                         {group.pageIndices.length}p
                       </span>
                     </button>
@@ -259,14 +250,13 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                 </div>
               )}
 
-              {/* Action row */}
               <div
-                className={`px-2 py-2 flex items-center gap-1.5 ${groups.length > 0 ? "border-t border-slate-700/50" : ""}`}
+                className={`px-2 py-2 flex items-center gap-1.5 ${groups.length > 0 ? "border-t border-bdr" : ""}`}
               >
                 <button
                   onClick={handleCreateGroup}
                   title="Create new group (↵)"
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 hover:border-indigo-500/50 transition-colors text-[11px] font-medium text-indigo-300 flex-1"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-acc/15 hover:bg-acc/25 border border-acc/25 hover:border-acc/45 transition-colors text-[11px] font-medium text-acc flex-1"
                 >
                   <svg
                     width="10"
@@ -285,7 +275,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                   <button
                     onClick={handleRemoveFromGroups}
                     title="Remove from group (⌫)"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-slate-700 transition-colors text-[11px] font-medium text-slate-500 hover:text-slate-300 flex-shrink-0"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-ctrl transition-colors text-[11px] font-medium text-ink-3 hover:text-ink-2 flex-shrink-0"
                   >
                     <svg
                       width="10"
@@ -305,9 +295,8 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                 )}
               </div>
 
-              {/* Keyboard hint strip */}
-              <div className="px-3 py-1.5 bg-slate-900/50 border-t border-slate-700/30">
-                <span className="text-slate-600 text-[10px]">
+              <div className="px-3 py-1.5 bg-surf-3/50 border-t border-bdr/50">
+                <span className="text-ink-4 text-[10px]">
                   ↵ new{commonGroup ? " · F2 rename" : ""} · ⌫ remove · Esc
                   dismiss
                 </span>

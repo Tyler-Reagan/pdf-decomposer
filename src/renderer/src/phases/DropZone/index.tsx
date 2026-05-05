@@ -47,9 +47,6 @@ export function DropZone() {
         setError("Please drop a PDF file");
         return;
       }
-      // Read bytes immediately — files dragged from browsers/email clients
-      // live in an OS temp dir that can be deleted within milliseconds of drop.
-      // We copy to a stable temp path controlled by the app before proceeding.
       setIsLoading(true);
       try {
         const arrayBuffer = await file.arrayBuffer();
@@ -69,7 +66,7 @@ export function DropZone() {
   );
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8 overflow-y-auto">
+    <div className="flex flex-col items-center justify-center h-full bg-surf-2 px-8 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -79,10 +76,10 @@ export function DropZone() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold tracking-tight mb-2">
-            <span className="text-white">PDF </span>
-            <span className="text-indigo-400">Decomposer</span>
+            <span className="text-ink-1">PDF </span>
+            <span className="text-acc">Decomposer</span>
           </h1>
-          <p className="text-slate-400 text-lg">
+          <p className="text-ink-3 text-lg">
             Split any PDF into multiple files by page range
           </p>
         </div>
@@ -103,7 +100,7 @@ export function DropZone() {
               : "var(--color-border-strong)",
             backgroundColor: isDragging
               ? "var(--color-accent-hover)"
-              : "rgba(15,23,42,0.6)",
+              : "var(--surf-1)",
           }}
           transition={{ duration: 0.15 }}
           className="border-2 border-dashed rounded-2xl p-16 flex flex-col items-center gap-5 cursor-pointer select-none"
@@ -114,15 +111,15 @@ export function DropZone() {
             <>
               <UploadIcon dragging={isDragging} />
               <div className="text-center">
-                <p className="text-white text-xl font-medium">
+                <p className="text-ink-1 text-xl font-medium">
                   {isDragging ? "Drop your PDF here" : "Drop a PDF here"}
                 </p>
-                <p className="text-slate-500 mt-1">or click to browse files</p>
+                <p className="text-ink-3 mt-1">or click to browse files</p>
               </div>
-              <div className="flex items-center gap-3 text-slate-600 text-sm mt-2">
-                <span className="h-px w-12 bg-slate-700" />
+              <div className="flex items-center gap-3 text-ink-4 text-sm mt-2">
+                <span className="h-px w-12 bg-bdr" />
                 <span>PDF files only</span>
-                <span className="h-px w-12 bg-slate-700" />
+                <span className="h-px w-12 bg-bdr" />
               </div>
             </>
           )}
@@ -133,13 +130,13 @@ export function DropZone() {
           {FEATURES.map(({ Icon, label, desc }) => (
             <div
               key={label}
-              className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50 cursor-default"
+              className="bg-surf-1/50 rounded-xl p-4 text-center border border-bdr cursor-default"
             >
               <div className="flex justify-center mb-2">
-                <Icon size={20} className="text-indigo-400" />
+                <Icon size={20} className="text-acc" />
               </div>
-              <div className="text-white text-sm font-medium">{label}</div>
-              <div className="text-slate-500 text-xs mt-1">{desc}</div>
+              <div className="text-ink-1 text-sm font-medium">{label}</div>
+              <div className="text-ink-3 text-xs mt-1">{desc}</div>
             </div>
           ))}
         </div>
@@ -148,7 +145,7 @@ export function DropZone() {
         <div className="text-center mt-6">
           <button
             onClick={() => setTourActive(true)}
-            className="text-slate-500 text-sm hover:text-indigo-400 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded px-1"
+            className="text-ink-3 text-sm hover:text-acc transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc rounded px-1"
           >
             Take a tour →
           </button>
@@ -181,14 +178,14 @@ function UploadIcon({ dragging }: { dragging: boolean }) {
     <motion.div
       animate={{ scale: dragging ? 1.12 : 1, rotate: dragging ? -5 : 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      className="w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center"
+      className="w-20 h-20 rounded-2xl bg-surf-1 border border-bdr-hi flex items-center justify-center"
     >
       <svg
         width="40"
         height="40"
         viewBox="0 0 24 24"
         fill="none"
-        stroke={dragging ? "var(--color-accent)" : "#64748b"}
+        stroke={dragging ? "var(--acc)" : "var(--ink-3)"}
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -206,11 +203,11 @@ function LoadingSpinner() {
   return (
     <div className="flex flex-col items-center gap-4 py-4">
       <motion.div
-        className="w-12 h-12 border-4 border-slate-700 border-t-indigo-500 rounded-full"
+        className="w-12 h-12 border-4 border-bdr border-t-acc rounded-full"
         animate={{ rotate: 360 }}
         transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
       />
-      <p className="text-slate-400">Reading PDF…</p>
+      <p className="text-ink-3">Reading PDF…</p>
     </div>
   );
 }

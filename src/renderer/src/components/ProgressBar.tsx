@@ -9,13 +9,13 @@ interface ProgressBarProps {
 export function ProgressBar({
   value,
   className = "",
-  color = "#6366f1",
+  color = "var(--acc)",
 }: ProgressBarProps) {
   const pct = Math.min(1, Math.max(0, value)) * 100;
 
   return (
     <div
-      className={`relative h-2 rounded-full bg-slate-700/60 overflow-hidden ${className}`}
+      className={`relative h-2 rounded-full bg-ctrl/60 overflow-hidden ${className}`}
       role="progressbar"
       aria-valuenow={Math.round(pct)}
       aria-valuemin={0}

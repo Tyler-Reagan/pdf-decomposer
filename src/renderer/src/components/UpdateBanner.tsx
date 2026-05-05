@@ -13,7 +13,6 @@ export function UpdateBanner() {
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  // macOS requires manual install from signed DMG; open browser instead
   const isMac = window.electron.process.platform === "darwin";
 
   useEffect(() => {
@@ -82,8 +81,7 @@ export function UpdateBanner() {
           transition={{ duration: 0.2 }}
           className="flex-shrink-0 overflow-hidden"
         >
-          <div className={`flex items-center gap-3 px-4 py-2 border-b text-sm ${state === "error" ? "bg-red-950/80 border-red-500/20" : "bg-blue-950/80 border-blue-500/20"}`}>
-            {/* Status dot */}
+          <div className={`flex items-center gap-3 px-4 py-2 border-b text-sm ${state === "error" ? "bg-red-950/80 border-red-500/20" : "bg-acc/8 border-acc/20"}`}>
             <span
               className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                 state === "downloaded"
@@ -91,20 +89,19 @@ export function UpdateBanner() {
                   : state === "error"
                     ? "bg-red-400"
                     : state === "downloading"
-                      ? "bg-blue-400 animate-pulse"
-                      : "bg-blue-400"
+                      ? "bg-acc animate-pulse"
+                      : "bg-acc"
               }`}
             />
 
-            {/* Message */}
-            <span className="text-slate-300 flex-1 min-w-0">
+            <span className="text-ink-2 flex-1 min-w-0">
               {state === "available" && (
                 <>
-                  <span className="text-white font-medium">
+                  <span className="text-ink-1 font-medium">
                     v{version} available
                   </span>
                   {isMac ? (
-                    <span className="text-slate-400">
+                    <span className="text-ink-3">
                       {" "}
                       — opens GitHub releases. If Gatekeeper blocks the app,
                       right-click the DMG and choose Open.
@@ -114,20 +111,20 @@ export function UpdateBanner() {
               )}
               {state === "downloading" && (
                 <span className="flex items-center gap-2">
-                  <span className="text-slate-300">Downloading update…</span>
-                  <span className="w-24 h-1 bg-slate-700 rounded-full overflow-hidden flex-shrink-0">
+                  <span className="text-ink-2">Downloading update…</span>
+                  <span className="w-24 h-1 bg-ctrl rounded-full overflow-hidden flex-shrink-0">
                     <span
-                      className="h-full bg-blue-400 rounded-full block transition-all duration-300"
+                      className="h-full bg-acc rounded-full block transition-all duration-300"
                       style={{ width: `${progress}%` }}
                     />
                   </span>
-                  <span className="text-slate-400 text-xs tabular-nums">
+                  <span className="text-ink-3 text-xs tabular-nums">
                     {progress}%
                   </span>
                 </span>
               )}
               {state === "downloaded" && (
-                <span className="text-white font-medium">
+                <span className="text-ink-1 font-medium">
                   v{version} ready to install
                 </span>
               )}
@@ -138,12 +135,11 @@ export function UpdateBanner() {
               )}
             </span>
 
-            {/* Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {state === "available" && (
                 <button
                   onClick={handleDownload}
-                  className="px-2.5 py-0.5 rounded bg-blue-500 hover:bg-blue-400 text-white text-xs font-medium transition-colors cursor-pointer"
+                  className="px-2.5 py-0.5 rounded bg-acc hover:bg-acc-hi text-white text-xs font-medium transition-colors cursor-pointer"
                 >
                   {isMac ? "Download" : "Update"}
                 </button>
@@ -167,7 +163,7 @@ export function UpdateBanner() {
               {state !== "downloading" && (
                 <button
                   onClick={() => setDismissed(true)}
-                  className="text-slate-500 hover:text-slate-300 transition-colors leading-none cursor-pointer p-0.5"
+                  className="text-ink-4 hover:text-ink-2 transition-colors leading-none cursor-pointer p-0.5"
                   aria-label="Dismiss"
                 >
                   <svg

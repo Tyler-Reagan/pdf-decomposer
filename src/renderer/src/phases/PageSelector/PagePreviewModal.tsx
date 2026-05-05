@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { PageGroup } from "../../types/pdf";
 
 interface PagePreviewModalProps {
-  pageIndices: number[]; // sorted list of pages to preview
+  pageIndices: number[];
   bitmaps: Map<number, ImageBitmap>;
   errorPages: Set<number>;
   groups: PageGroup[];
@@ -19,7 +19,6 @@ export function PagePreviewModal({
   onClose,
   onRequestRender,
 }: PagePreviewModalProps) {
-  // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -37,33 +36,30 @@ export function PagePreviewModal({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
       >
-        {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           onClick={onClose}
         />
 
-        {/* Panel */}
         <motion.div
-          className="relative z-10 flex flex-col bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl mx-6 my-6 overflow-hidden"
+          className="relative z-10 flex flex-col bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl mx-6 my-6 overflow-hidden"
           style={{ maxHeight: "calc(100vh - 48px)" }}
           initial={{ scale: 0.96, y: 8 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.96, y: 8 }}
           transition={{ duration: 0.18 }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-bdr-hi flex-shrink-0">
             <div>
-              <h2 className="text-white font-semibold text-lg">Page Preview</h2>
-              <p className="text-slate-500 text-sm">
+              <h2 className="text-ink-1 font-semibold text-lg">Page Preview</h2>
+              <p className="text-ink-3 text-sm">
                 {pageIndices.length} page{pageIndices.length !== 1 ? "s" : ""}{" "}
                 selected
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+              className="text-ink-3 hover:text-ink-1 transition-colors p-1 rounded-lg hover:bg-surf-1"
               title="Close (Esc)"
             >
               <svg
@@ -80,7 +76,6 @@ export function PagePreviewModal({
             </button>
           </div>
 
-          {/* Grid */}
           <div className="flex-1 overflow-y-auto p-6">
             <div
               className="grid gap-6"
@@ -128,7 +123,6 @@ const PreviewCard = memo(function PreviewCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const requested = useRef(false);
 
-  // Lazy-load: request render when card enters view
   useEffect(() => {
     if (!cardRef.current) return;
     const observer = new IntersectionObserver(
@@ -144,7 +138,6 @@ const PreviewCard = memo(function PreviewCard({
     return () => observer.disconnect();
   }, [onVisible]);
 
-  // Draw bitmap when it arrives
   useEffect(() => {
     if (!bitmap || !canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -158,17 +151,16 @@ const PreviewCard = memo(function PreviewCard({
   return (
     <div ref={cardRef} className="flex flex-col items-center gap-2">
       <div
-        className="relative rounded-xl overflow-hidden bg-slate-800 shadow-lg w-full"
+        className="relative rounded-xl overflow-hidden bg-surf-1 shadow-lg w-full"
         style={{
-          border: `2px solid ${group ? group.color + "80" : "#334155"}`,
+          border: `2px solid ${group ? group.color + "80" : "var(--bdr)"}`,
           ...(group
             ? { borderLeftColor: group.color, borderLeftWidth: 4 }
             : {}),
         }}
       >
-        {/* Page content */}
         <div
-          className="w-full flex items-center justify-center bg-slate-800"
+          className="w-full flex items-center justify-center bg-surf-1"
           style={{ minHeight: 320 }}
         >
           {bitmap ? (
@@ -189,31 +181,30 @@ const PreviewCard = memo(function PreviewCard({
                 height="32"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#94a3b8"
+                stroke="var(--ink-3)"
                 strokeWidth="1.5"
               >
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="text-slate-500 text-xs">Failed to render</span>
+              <span className="text-ink-3 text-xs">Failed to render</span>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-12">
               <motion.div
-                className="w-8 h-8 border-2 border-slate-600 border-t-indigo-500 rounded-full"
+                className="w-8 h-8 border-2 border-bdr border-t-acc rounded-full"
                 animate={{ rotate: 360 }}
                 transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
               />
-              <span className="text-slate-600 text-xs">Rendering…</span>
+              <span className="text-ink-4 text-xs">Rendering…</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Label */}
       <div className="flex items-center gap-2">
-        <span className="text-slate-400 text-sm font-medium">
+        <span className="text-ink-2 text-sm font-medium">
           Page {pageIndex + 1}
         </span>
         {group && (

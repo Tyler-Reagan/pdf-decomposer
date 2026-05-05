@@ -30,7 +30,7 @@ export function GroupPanel() {
   return (
     <div className="flex flex-col h-full" data-tour="group-panel-inner">
       <div className="px-4 pt-4 pb-2">
-        <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-ink-3 uppercase tracking-wider">
           Output Files
         </h2>
       </div>
@@ -109,7 +109,7 @@ export function GroupPanel() {
         </AnimatePresence>
 
         {groups.length === 0 && metaGroups.length === 0 && (
-          <div className="text-center py-6 text-slate-600 text-sm">
+          <div className="text-center py-6 text-ink-4 text-sm">
             No output files yet.
             <br />
             Select pages and assign them to a group.
@@ -139,7 +139,7 @@ export function GroupPanel() {
       )}
 
       {/* Add buttons */}
-      <div className="p-3 border-t border-slate-700/60 space-y-1.5">
+      <div className="p-3 border-t border-bdr/60 space-y-1.5">
         <Button
           variant="secondary"
           size="sm"
@@ -224,7 +224,6 @@ function MetaGroupSection({
     setNameValue(metaGroup.name);
   }, [metaGroup.name]);
 
-  // Close add dropdown on outside click
   useEffect(() => {
     if (!showAddDropdown) return;
     const handler = (e: MouseEvent) => {
@@ -239,7 +238,6 @@ function MetaGroupSection({
     return () => document.removeEventListener("mousedown", handler);
   }, [showAddDropdown]);
 
-  // Close color picker on outside click
   useEffect(() => {
     if (!showColorPicker) return;
     const handler = (e: MouseEvent) => {
@@ -263,15 +261,18 @@ function MetaGroupSection({
 
   return (
     <div
-      className="rounded-xl border border-slate-700/50 overflow-visible"
-      style={{ borderLeftColor: metaGroup.color, borderLeftWidth: 3 }}
+      className="rounded-xl overflow-visible"
+      style={{ border: `1px solid ${metaGroup.color}50` }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/80 rounded-t-xl">
+      <div
+        className="flex items-center gap-2 px-3 py-2 rounded-t-xl"
+        style={{ backgroundColor: `${metaGroup.color}18` }}
+      >
         {/* Color swatch */}
         <div className="relative flex-shrink-0">
           <button
-            className="w-5 h-5 rounded-full border-2 border-slate-600 focus:outline-none cursor-pointer hover:scale-110 transition-transform duration-150"
+            className="w-5 h-5 rounded-full border-2 border-bdr focus:outline-none cursor-pointer hover:scale-110 transition-transform duration-150"
             style={{ backgroundColor: metaGroup.color }}
             onClick={() => setShowColorPicker((v) => !v)}
             title="Change color"
@@ -284,7 +285,7 @@ function MetaGroupSection({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.12 }}
-                className="absolute left-7 top-0 z-50 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl"
+                className="absolute left-7 top-0 z-50 bg-surf-2 border border-bdr-hi rounded-xl p-3 shadow-2xl"
                 style={{ width: 200 }}
               >
                 <HexColorPicker
@@ -295,7 +296,7 @@ function MetaGroupSection({
                   {GROUP_COLORS.map((c) => (
                     <button
                       key={c}
-                      className="w-5 h-5 rounded-full border border-slate-700 hover:scale-110 transition-transform"
+                      className="w-5 h-5 rounded-full border border-bdr hover:scale-110 transition-transform"
                       style={{ backgroundColor: c }}
                       onClick={() => {
                         onUpdateMetaGroup({ color: c });
@@ -323,11 +324,11 @@ function MetaGroupSection({
                 setIsEditingName(false);
               }
             }}
-            className="flex-1 bg-slate-700 text-white text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-indigo-500 min-w-0"
+            className="flex-1 bg-ctrl text-ink-1 text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-acc min-w-0"
           />
         ) : (
           <button
-            className="flex-1 text-left text-slate-200 text-sm font-semibold truncate hover:text-white transition-colors min-w-0"
+            className="flex-1 text-left text-ink-1 text-sm font-semibold truncate hover:text-ink-1 transition-colors min-w-0"
             onDoubleClick={() => setIsEditingName(true)}
             title="Double-click to rename"
           >
@@ -340,7 +341,7 @@ function MetaGroupSection({
           <button
             onClick={() => setShowAddDropdown((v) => !v)}
             disabled={ungroupedGroups.length === 0}
-            className="text-slate-500 hover:text-slate-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="text-ink-4 hover:text-ink-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title={
               ungroupedGroups.length === 0
                 ? "No ungrouped files to add"
@@ -360,8 +361,8 @@ function MetaGroupSection({
             </svg>
           </button>
           {showAddDropdown && ungroupedGroups.length > 0 && (
-            <div className="absolute right-0 top-6 z-50 bg-slate-900 border border-slate-700 rounded-lg shadow-xl min-w-40 py-1">
-              <div className="px-2 py-1 text-slate-600 text-[10px] uppercase tracking-wide">
+            <div className="absolute right-0 top-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-40 py-1">
+              <div className="px-2 py-1 text-ink-4 text-[10px] uppercase tracking-wide">
                 Add to this meta group
               </div>
               {ungroupedGroups.map((g) => (
@@ -371,14 +372,14 @@ function MetaGroupSection({
                     onAssignToMetaGroup(g.id, metaGroup.id);
                     setShowAddDropdown(false);
                   }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2 transition-colors"
+                  className="w-full text-left px-3 py-1.5 text-xs text-ink-2 hover:bg-surf-1 flex items-center gap-2 transition-colors"
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: g.color }}
                   />
                   <span className="truncate">{g.name}</span>
-                  <span className="text-slate-600 ml-auto flex-shrink-0">
+                  <span className="text-ink-4 ml-auto flex-shrink-0">
                     {g.pageIndices.length}p
                   </span>
                 </button>
@@ -390,7 +391,7 @@ function MetaGroupSection({
         {/* Delete meta group */}
         <button
           onClick={onRemoveMetaGroup}
-          className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
+          className="text-ink-4 hover:text-red-400 transition-colors flex-shrink-0"
           title="Remove meta group"
         >
           <svg
@@ -408,9 +409,9 @@ function MetaGroupSection({
       </div>
 
       {/* Member groups */}
-      <div className="px-2 py-2 space-y-1.5 bg-slate-900/40 rounded-b-xl">
+      <div className="px-2 py-2 space-y-1.5 bg-surf-3/20 rounded-b-xl">
         {groups.length === 0 ? (
-          <div className="text-xs text-slate-600 italic px-2 py-1">
+          <div className="text-xs text-ink-4 italic px-2 py-1">
             No files yet — click + to add
           </div>
         ) : (
@@ -508,8 +509,8 @@ function GroupCard({
 
   return (
     <div
-      className={`rounded-xl bg-slate-800/60 border border-slate-700/50 p-3 cursor-pointer transition-colors hover:bg-slate-800${group.pageIndices.length === 0 ? " opacity-60" : ""}`}
-      style={{ borderLeftColor: group.color, borderLeftWidth: 3 }}
+      className={`rounded-xl bg-surf-1/60 p-3 cursor-pointer transition-colors hover:bg-surf-1${group.pageIndices.length === 0 ? " opacity-60" : ""}`}
+      style={{ border: `1px solid ${group.color}50` }}
       onClick={group.pageIndices.length > 0 ? onSelectGroup : undefined}
       title={
         group.pageIndices.length > 0 ? "Click to select these pages" : undefined
@@ -519,7 +520,7 @@ function GroupCard({
         {/* Color swatch */}
         <div className="relative flex-shrink-0">
           <button
-            className="w-6 h-6 rounded-full border-2 border-slate-600 flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer hover:scale-110 transition-transform duration-150"
+            className="w-6 h-6 rounded-full border-2 border-bdr flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-acc cursor-pointer hover:scale-110 transition-transform duration-150"
             style={{ backgroundColor: group.color }}
             onClick={(e) => {
               e.stopPropagation();
@@ -535,7 +536,7 @@ function GroupCard({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.12 }}
-                className="absolute left-8 top-0 z-50 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl"
+                className="absolute left-8 top-0 z-50 bg-surf-2 border border-bdr-hi rounded-xl p-3 shadow-2xl"
                 style={{ width: 200 }}
               >
                 <HexColorPicker color={group.color} onChange={onUpdateColor} />
@@ -544,7 +545,7 @@ function GroupCard({
                   {GROUP_COLORS.map((c) => (
                     <button
                       key={c}
-                      className="w-5 h-5 rounded-full border border-slate-700 hover:scale-110 transition-transform"
+                      className="w-5 h-5 rounded-full border border-bdr hover:scale-110 transition-transform"
                       style={{ backgroundColor: c }}
                       onClick={() => {
                         onUpdateColor(c);
@@ -573,11 +574,11 @@ function GroupCard({
                 setIsEditingName(false);
               }
             }}
-            className="flex-1 bg-slate-700 text-white text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-indigo-500 min-w-0"
+            className="flex-1 bg-ctrl text-ink-1 text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-acc min-w-0"
           />
         ) : (
           <button
-            className="flex-1 text-left text-white text-sm font-medium hover:text-indigo-300 transition-colors truncate min-w-0"
+            className="flex-1 text-left text-ink-1 text-sm font-medium hover:text-acc transition-colors truncate min-w-0"
             onDoubleClick={() => setIsEditingName(true)}
             title="Double-click to rename"
           >
@@ -593,7 +594,7 @@ function GroupCard({
               e.stopPropagation();
               onAssignToMetaGroup(null);
             }}
-            className="text-slate-600 hover:text-slate-400 transition-colors flex-shrink-0"
+            className="text-ink-4 hover:text-ink-2 transition-colors flex-shrink-0"
             title="Remove from meta group"
           >
             <svg
@@ -616,7 +617,7 @@ function GroupCard({
                 e.stopPropagation();
                 setShowMetaGroupPicker((v) => !v);
               }}
-              className="text-slate-600 hover:text-slate-400 transition-colors"
+              className="text-ink-4 hover:text-ink-2 transition-colors"
               title="Move to meta group"
             >
               <svg
@@ -633,8 +634,8 @@ function GroupCard({
               </svg>
             </button>
             {showMetaGroupPicker && (
-              <div className="absolute right-0 bottom-6 z-50 bg-slate-900 border border-slate-700 rounded-lg shadow-xl min-w-36 py-1">
-                <div className="px-2 py-1 text-slate-600 text-[10px] uppercase tracking-wide">
+              <div className="absolute right-0 bottom-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-36 py-1">
+                <div className="px-2 py-1 text-ink-4 text-[10px] uppercase tracking-wide">
                   Move to meta group
                 </div>
                 {allMetaGroups.map((mg) => (
@@ -645,7 +646,7 @@ function GroupCard({
                       onAssignToMetaGroup(mg.id);
                       setShowMetaGroupPicker(false);
                     }}
-                    className="w-full text-left px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-3 py-1.5 text-xs text-ink-2 hover:bg-surf-1 flex items-center gap-2 transition-colors"
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"
@@ -665,7 +666,7 @@ function GroupCard({
             e.stopPropagation();
             onRemove();
           }}
-          className="text-slate-600 hover:text-red-400 transition-colors flex-shrink-0"
+          className="text-ink-4 hover:text-red-400 transition-colors flex-shrink-0"
           title="Remove group"
         >
           <svg
@@ -683,12 +684,12 @@ function GroupCard({
       </div>
 
       {/* Page summary */}
-      <div className="mt-2 text-slate-500 text-[11px]">
+      <div className="mt-2 text-ink-4 text-[11px]">
         {group.pageIndices.length === 0 ? (
           <span className="italic">No pages assigned</span>
         ) : (
           <span>
-            <span className="text-slate-300 font-medium">
+            <span className="text-ink-2 font-medium">
               {group.pageIndices.length}
             </span>{" "}
             page

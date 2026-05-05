@@ -51,21 +51,18 @@ export const PageThumbnail = memo(function PageThumbnail({
       style={{ height: cardHeight, userSelect: "none" }}
     >
       <motion.div
-        className="relative rounded-lg overflow-hidden bg-slate-800 flex flex-col h-full"
+        className="relative rounded-lg overflow-hidden bg-surf-1 flex flex-col h-full"
         style={{
-          border: `${borderWidth}px solid ${isSelected ? "#6366f1" : group ? group.color + "80" : "#334155"}`,
+          border: `${borderWidth}px solid ${isSelected ? "var(--acc)" : group ? group.color + "80" : "var(--bdr)"}`,
           boxShadow: isSelected
-            ? "0 0 0 2px rgba(99,102,241,0.4), 0 4px 12px rgba(0,0,0,0.4)"
+            ? "0 0 0 2px color-mix(in oklch, var(--acc) 35%, transparent), 0 4px 12px rgba(0,0,0,0.3)"
             : group
               ? `0 0 0 1px ${group.color}30`
-              : "0 2px 8px rgba(0,0,0,0.3)",
+              : "0 2px 8px rgba(0,0,0,0.2)",
         }}
-        animate={{
-          scale: isSelected ? 1.03 : 1,
-        }}
+        animate={{ scale: isSelected ? 1.03 : 1 }}
         transition={{ duration: 0.1 }}
       >
-        {/* Group color stripe */}
         {group && (
           <div
             className="absolute left-0 top-0 bottom-0 w-1 z-10"
@@ -73,14 +70,12 @@ export const PageThumbnail = memo(function PageThumbnail({
           />
         )}
 
-        {/* Selected overlay */}
         {isSelected && (
-          <div className="absolute inset-0 bg-indigo-500/15 z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-acc/12 z-10 pointer-events-none" />
         )}
 
-        {/* Checkmark */}
         {isSelected && (
-          <div className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center shadow">
+          <div className="absolute top-1.5 right-1.5 z-20 w-5 h-5 rounded-full bg-acc flex items-center justify-center shadow">
             <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
               <path
                 d="M1 4L4 7L10 1"
@@ -93,8 +88,7 @@ export const PageThumbnail = memo(function PageThumbnail({
           </div>
         )}
 
-        {/* Thumbnail area — fills available height, canvas scales to fit */}
-        <div className="flex-1 flex items-center justify-center bg-slate-800 overflow-hidden min-h-0">
+        <div className="flex-1 flex items-center justify-center bg-surf-1 overflow-hidden min-h-0">
           {bitmap ? (
             <canvas
               ref={canvasRef}
@@ -121,7 +115,7 @@ export const PageThumbnail = memo(function PageThumbnail({
                 height="24"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#94a3b8"
+                stroke="var(--ink-3)"
                 strokeWidth="1.5"
                 className="opacity-50 group-hover/native:opacity-80 transition-opacity"
               >
@@ -129,24 +123,23 @@ export const PageThumbnail = memo(function PageThumbnail({
                 <line x1="12" y1="8" x2="12" y2="12" />
                 <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
-              <span className="text-slate-500 text-[10px] opacity-50">
+              <span className="text-ink-3 text-[10px] opacity-50">
                 Failed to render
               </span>
-              <span className="text-indigo-400 text-[10px] font-medium opacity-0 group-hover/native:opacity-100 transition-opacity">
+              <span className="text-acc text-[10px] font-medium opacity-0 group-hover/native:opacity-100 transition-opacity">
                 Open in viewer
               </span>
             </button>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 w-full h-full">
-              <div className="w-8 h-10 rounded-sm bg-slate-700 animate-pulse" />
-              <div className="w-6 h-1 rounded bg-slate-700 animate-pulse" />
+              <div className="w-8 h-10 rounded-sm bg-ctrl animate-pulse" />
+              <div className="w-6 h-1 rounded bg-ctrl animate-pulse" />
             </div>
           )}
         </div>
 
-        {/* Page number */}
-        <div className="bg-slate-900/80 text-center py-1 flex-shrink-0">
-          <span className="text-slate-400 text-[11px] font-medium">
+        <div className="bg-surf-2/80 text-center py-1 flex-shrink-0">
+          <span className="text-ink-3 text-[11px] font-medium">
             {pageIndex + 1}
           </span>
         </div>

@@ -7,7 +7,6 @@ import type { TourPlacement } from "./tourSteps";
 
 const TOOLTIP_W = 296;
 const TOOLTIP_OFFSET = 14;
-// Conservative estimate used only for boundary clamping — actual height varies.
 const TOOLTIP_H_EST = 210;
 
 const PHASE_ORDER = [
@@ -26,14 +25,12 @@ function phaseIndex(phase: AppPhase): number {
 
 const STEP_PHASE_GATE: Record<number, AppPhase> = {
   0: "selecting",
-  // Step 4 = "configure-output-btn" nav bridge: blocked until user navigates to configuring
   4: "configuring",
 };
 
 interface ResolvedPos {
   top: number;
   left: number;
-  /** translateY to apply so the tooltip stays on the correct side of the target */
   translateY: string;
 }
 
@@ -49,7 +46,6 @@ function resolvePosition(
 
   switch (placement) {
     case "top":
-      // Anchor the BOTTOM of the tooltip just above the target.
       top = rect.top - TOOLTIP_OFFSET;
       left = rect.left + rect.width / 2 - TOOLTIP_W / 2;
       translateY = "-100%";
@@ -60,7 +56,6 @@ function resolvePosition(
       translateY = "0px";
       break;
     case "left":
-      // Vertically center on target; anchor right edge of tooltip to left of target.
       top = rect.top + rect.height / 2 - TOOLTIP_H_EST / 2;
       left = rect.left - TOOLTIP_W - TOOLTIP_OFFSET;
       translateY = "0px";
@@ -72,22 +67,16 @@ function resolvePosition(
       break;
   }
 
-  // Clamp horizontal
   left = Math.max(8, Math.min(left, vpW - TOOLTIP_W - 8));
 
-  // Clamp vertical — for "top" placement the translated position is top - TOOLTIP_H_EST,
-  // so the effective top edge is `top - TOOLTIP_H_EST`. Ensure it doesn't go off-screen.
   if (placement === "top") {
     const effectiveTop = top - TOOLTIP_H_EST;
     if (effectiveTop < 8) {
-      // Flip below the target instead
       top = rect.bottom + TOOLTIP_OFFSET;
       translateY = "0px";
     }
-    // Also clamp so the bottom of the tooltip (= `top`) stays inside the viewport
     top = Math.min(top, vpH - 8);
   } else {
-    // For other placements, clamp the top edge and ensure bottom doesn't overflow
     top = Math.max(8, Math.min(top, vpH - TOOLTIP_H_EST - 8));
   }
 
@@ -133,7 +122,6 @@ export function TourOverlay() {
     return () => clearInterval(id);
   }, [tourActive, measureTarget]);
 
-  // Auto-advance when phase satisfies the current step's gate
   useEffect(() => {
     if (!tourActive) return;
     const required = STEP_PHASE_GATE[stepIndex];
@@ -144,9 +132,6 @@ export function TourOverlay() {
     }
   }, [tourActive, phase, stepIndex, next]);
 
-  // Keyboard guard — registered in the capture phase so it runs before every app
-  // handler. Special/control keys that drive app state are stopped entirely;
-  // printable characters pass through so mouse-initiated text inputs still work.
   useEffect(() => {
     if (!tourActive) return;
 
@@ -156,14 +141,12 @@ export function TourOverlay() {
     ]);
 
     const handler = (e: KeyboardEvent) => {
-      // Escape always dismisses the tour.
       if (e.key === "Escape") {
         e.stopImmediatePropagation();
         dismiss();
         return;
       }
 
-      // Arrow keys navigate the tour when no app element owns focus.
       if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         const active = document.activeElement;
         const appHasFocus =
@@ -178,7 +161,6 @@ export function TourOverlay() {
         }
       }
 
-      // Block all other app-state-affecting keys from reaching any app handler.
       if (APP_STATE_KEYS.has(e.key)) {
         e.stopImmediatePropagation();
         e.preventDefault();
@@ -233,8 +215,8 @@ export function TourOverlay() {
             className="fixed inset-0 z-[9000] pointer-events-none"
             style={{
               background: targetRect
-                ? `radial-gradient(ellipse ${targetRect.width + 32}px ${targetRect.height + 32}px at ${targetRect.left + targetRect.width / 2}px ${targetRect.top + targetRect.height / 2}px, transparent 88%, rgba(2,6,23,0.72) 100%)`
-                : "rgba(2,6,23,0.72)",
+                ? `radial-gradient(ellipse ${targetRect.width + 32}px ${targetRect.height + 32}px at ${targetRect.left + targetRect.width / 2}px ${targetRect.top + targetRect.height / 2}px, transparent 88%, oklch(0.11 0.007 232 / 0.75) 100%)`
+                : "oklch(0.11 0.007 232 / 0.75)",
             }}
           />
 
@@ -253,12 +235,12 @@ export function TourOverlay() {
                 width: targetRect.width + 8,
                 height: targetRect.height + 8,
                 boxShadow:
-                  "0 0 0 2px #818cf8, 0 0 0 5px rgba(99,102,241,0.22), 0 8px 32px rgba(0,0,0,0.5)",
+                  "0 0 0 2px var(--acc), 0 0 0 5px color-mix(in oklch, var(--acc) 22%, transparent), 0 8px 32px rgba(0,0,0,0.5)",
               }}
             />
           )}
 
-          {/* Tooltip — outer div owns the positioning transform; inner motion.div owns the entrance animation */}
+          {/* Tooltip */}
           <div
             className="fixed z-[9002] pointer-events-auto"
             style={{
@@ -275,7 +257,7 @@ export function TourOverlay() {
             exit={{ opacity: 0, y: 6 }}
             transition={{ duration: 0.18, ease: [0, 0, 0.2, 1] }}
           >
-            <div className="bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-4 pt-3 pb-1">
                 <div className="flex gap-1 items-center">
@@ -284,18 +266,18 @@ export function TourOverlay() {
                       key={i}
                       className={`h-1 rounded-full transition-all duration-200 ${
                         i === stepIndex
-                          ? "w-4 bg-indigo-400"
-                          : "w-1.5 bg-slate-700"
+                          ? "w-4 bg-acc"
+                          : "w-1.5 bg-ctrl"
                       }`}
                     />
                   ))}
-                  <span className="text-slate-600 text-[10px] ml-2 tabular-nums">
+                  <span className="text-ink-4 text-[10px] ml-2 tabular-nums">
                     {stepIndex + 1}/{totalSteps}
                   </span>
                 </div>
                 <button
                   onClick={dismiss}
-                  className="text-slate-600 hover:text-slate-300 transition-colors cursor-pointer -mr-1"
+                  className="text-ink-4 hover:text-ink-2 transition-colors cursor-pointer -mr-1"
                   aria-label="Close tour"
                 >
                   <svg
@@ -314,18 +296,17 @@ export function TourOverlay() {
 
               {/* Content */}
               <div className="px-4 pt-1 pb-3">
-                <h3 className="text-white font-semibold text-sm mb-1.5">
+                <h3 className="text-ink-1 font-semibold text-sm mb-1.5">
                   {currentStep.title}
                 </h3>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <p className="text-ink-3 text-xs leading-relaxed">
                   {currentStep.description}
                 </p>
 
-                {/* Contextual hint — what the user should do before continuing */}
                 {currentStep.hint && !nextBlocked && (
-                  <div className="mt-3 flex gap-2 items-start bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-3 py-2">
+                  <div className="mt-3 flex gap-2 items-start bg-acc/10 border border-acc/20 rounded-lg px-3 py-2">
                     <svg
-                      className="flex-shrink-0 mt-0.5 text-indigo-400"
+                      className="flex-shrink-0 mt-0.5 text-acc"
                       width="11"
                       height="11"
                       viewBox="0 0 24 24"
@@ -335,31 +316,30 @@ export function TourOverlay() {
                     >
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
-                    <p className="text-indigo-300 text-[11px] leading-snug">
+                    <p className="text-acc text-[11px] leading-snug">
                       {currentStep.hint}
                     </p>
                   </div>
                 )}
 
-                {/* Demo PDF option */}
                 {showDemoOption && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="mt-3 pt-3 border-t border-slate-800"
+                    className="mt-3 pt-3 border-t border-bdr"
                   >
-                    <p className="text-slate-500 text-xs mb-2">
+                    <p className="text-ink-3 text-xs mb-2">
                       Don't have a PDF handy?
                     </p>
                     <button
                       onClick={handleLoadDemo}
                       disabled={loadingDemo}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/60 text-slate-300 hover:text-white text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-surf-1 hover:bg-ctrl border border-bdr-hi text-ink-2 hover:text-ink-1 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loadingDemo ? (
                         <>
                           <motion.span
-                            className="inline-block w-3 h-3 border-2 border-slate-600 border-t-indigo-400 rounded-full"
+                            className="inline-block w-3 h-3 border-2 border-bdr-hi border-t-acc rounded-full"
                             animate={{ rotate: 360 }}
                             transition={{
                               duration: 0.7,
@@ -389,7 +369,6 @@ export function TourOverlay() {
                   </motion.div>
                 )}
 
-                {/* Gate notice */}
                 {nextBlocked && (
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -406,18 +385,18 @@ export function TourOverlay() {
               </div>
 
               {/* Nav footer */}
-              <div className="flex items-center justify-between px-4 py-3 border-t border-slate-800">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-bdr">
                 <button
                   onClick={prev}
                   disabled={isFirst}
-                  className="text-slate-500 hover:text-slate-200 text-xs transition-colors disabled:opacity-0 cursor-pointer"
+                  className="text-ink-3 hover:text-ink-1 text-xs transition-colors disabled:opacity-0 cursor-pointer"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={nextBlocked ? undefined : next}
                   disabled={nextBlocked}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-acc hover:bg-acc-hi disabled:bg-ctrl disabled:text-ink-3 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors cursor-pointer"
                 >
                   {isLast ? "Done" : "Next →"}
                 </button>
