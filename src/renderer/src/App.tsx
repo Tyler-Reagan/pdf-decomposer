@@ -27,23 +27,59 @@ export function App() {
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
 
-  const showResumeButton = !tourActive && phase !== "drop";
+  const showTourButton = !tourActive && phase !== "drop";
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-surf-2 text-ink-1 ring-1 ring-bdr/40">
       {/* Draggable title bar */}
       <div
-        className="flex-shrink-0 w-full flex items-center justify-end pr-2"
+        className="flex-shrink-0 w-full flex items-center justify-end gap-1 pr-2"
         style={{ height: 38, WebkitAppRegion: "drag" } as React.CSSProperties}
       >
+        {/* Theme toggle */}
         <button
           onClick={toggleTheme}
           style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-          className="w-7 h-7 flex items-center justify-center rounded text-ink-3 hover:text-ink-1 hover:bg-surf-1 transition-colors duration-150 cursor-pointer"
+          className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
           title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
         >
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+          <span>{theme === "dark" ? "Light" : "Dark"}</span>
         </button>
+
+        {/* Tour resume button */}
+        <AnimatePresence>
+          {showTourButton && (
+            <motion.button
+              key="tour-resume"
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              transition={{ duration: 0.18 }}
+              onClick={resume}
+              title={`Resume tour (step ${stepIndex + 1}/${totalSteps})`}
+              style={{
+                WebkitAppRegion: "no-drag",
+                boxShadow: "0 0 0 2px color-mix(in oklch, var(--acc) 40%, transparent)",
+              } as React.CSSProperties}
+              className="h-7 flex items-center gap-1.5 px-2 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-[11px] font-medium"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+              </svg>
+              <span>Tour</span>
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       <UpdateBanner />
@@ -83,35 +119,6 @@ export function App() {
         </AnimatePresence>
       </div>
       <TourOverlay />
-
-      <AnimatePresence>
-        {showResumeButton && (
-          <motion.button
-            key="tour-resume"
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.85 }}
-            transition={{ duration: 0.18 }}
-            onClick={resume}
-            title={`Resume tour (step ${stepIndex + 1}/${totalSteps})`}
-            className="fixed bottom-4 right-4 z-[8999] w-9 h-9 rounded-full bg-surf-1 border border-bdr-hi hover:bg-ctrl hover:border-acc/60 text-ink-3 hover:text-acc flex items-center justify-center transition-colors duration-150 cursor-pointer shadow-lg"
-            style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 8v4" />
-              <path d="M12 16h.01" />
-            </svg>
-          </motion.button>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
