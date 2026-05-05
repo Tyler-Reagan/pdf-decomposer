@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface NativePdfPreviewModalProps {
   filePath: string;
-  initialPage: number; // 0-indexed
+  initialPage: number;
   totalPages: number;
   onClose: () => void;
 }
@@ -14,15 +14,12 @@ export function NativePdfPreviewModal({
   totalPages,
   onClose,
 }: NativePdfPreviewModalProps) {
-  // 1-indexed to match the PDF #page= hash convention
   const [currentPage, setCurrentPage] = useState(initialPage + 1);
   const [loading, setLoading] = useState(true);
   const webviewRef = useRef<HTMLElement>(null);
 
-  // file:// URL — replace Windows backslashes, append page hash
   const src = `file://${filePath.replace(/\\/g, "/")}#page=${currentPage}`;
 
-  // Keyboard navigation
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
       if (e.key === "Escape") {
@@ -46,7 +43,6 @@ export function NativePdfPreviewModal({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose, totalPages]);
 
-  // Track webview load state — re-registers whenever src changes
   useEffect(() => {
     setLoading(true);
     const el = webviewRef.current as
@@ -71,39 +67,35 @@ export function NativePdfPreviewModal({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
       >
-        {/* Backdrop */}
         <div
           className="absolute inset-0 bg-black/80 backdrop-blur-sm"
           onClick={onClose}
         />
 
-        {/* Panel */}
         <motion.div
-          className="relative z-10 flex flex-col bg-slate-900 border border-slate-700/60 rounded-2xl shadow-2xl mx-6 my-6 overflow-hidden"
+          className="relative z-10 flex flex-col bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl mx-6 my-6 overflow-hidden"
           style={{ maxHeight: "calc(100vh - 48px)" }}
           initial={{ scale: 0.96, y: 8 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.96, y: 8 }}
           transition={{ duration: 0.18 }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-bdr-hi flex-shrink-0">
             <div className="flex items-center gap-5">
               <div>
-                <h2 className="text-white font-semibold text-lg">
+                <h2 className="text-ink-1 font-semibold text-lg">
                   Native Preview
                 </h2>
-                <p className="text-slate-500 text-sm">
+                <p className="text-ink-3 text-sm">
                   Rendered by Chromium's PDF engine
                 </p>
               </div>
 
-              {/* Page navigation */}
-              <div className="flex items-center gap-1 border border-slate-700 rounded-lg px-1">
+              <div className="flex items-center gap-1 border border-bdr-hi rounded-lg px-1">
                 <button
                   onClick={() => goTo(currentPage - 1)}
                   disabled={currentPage <= 1}
-                  className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 rounded text-ink-3 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Previous page (←)"
                 >
                   <svg
@@ -117,14 +109,14 @@ export function NativePdfPreviewModal({
                     <polyline points="15 18 9 12 15 6" />
                   </svg>
                 </button>
-                <span className="text-slate-300 text-sm font-medium tabular-nums px-1 select-none">
-                  {currentPage} <span className="text-slate-600">/</span>{" "}
+                <span className="text-ink-2 text-sm font-medium tabular-nums px-1 select-none">
+                  {currentPage} <span className="text-ink-4">/</span>{" "}
                   {totalPages}
                 </span>
                 <button
                   onClick={() => goTo(currentPage + 1)}
                   disabled={currentPage >= totalPages}
-                  className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="p-1.5 rounded text-ink-3 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   title="Next page (→)"
                 >
                   <svg
@@ -140,14 +132,14 @@ export function NativePdfPreviewModal({
                 </button>
               </div>
 
-              <span className="text-slate-600 text-xs">
+              <span className="text-ink-4 text-xs">
                 ← → to navigate · Esc to close
               </span>
             </div>
 
             <button
               onClick={onClose}
-              className="text-slate-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800"
+              className="text-ink-3 hover:text-ink-1 transition-colors p-1 rounded-lg hover:bg-surf-1"
               title="Close (Esc)"
             >
               <svg
@@ -164,13 +156,12 @@ export function NativePdfPreviewModal({
             </button>
           </div>
 
-          {/* Webview body */}
-          <div className="relative flex-1 min-h-0 bg-slate-800">
+          <div className="relative flex-1 min-h-0 bg-surf-1">
             {loading && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 bg-slate-900">
+              <div className="absolute inset-0 flex items-center justify-center z-10 bg-surf-2">
                 <div className="flex flex-col items-center gap-3">
                   <motion.div
-                    className="w-8 h-8 border-2 border-slate-600 border-t-indigo-500 rounded-full"
+                    className="w-8 h-8 border-2 border-bdr border-t-acc rounded-full"
                     animate={{ rotate: 360 }}
                     transition={{
                       duration: 0.8,
@@ -178,7 +169,7 @@ export function NativePdfPreviewModal({
                       ease: "linear",
                     }}
                   />
-                  <span className="text-slate-500 text-sm">
+                  <span className="text-ink-3 text-sm">
                     Loading page {currentPage}…
                   </span>
                 </div>

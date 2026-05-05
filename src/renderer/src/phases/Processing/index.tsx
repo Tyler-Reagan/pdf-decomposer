@@ -8,31 +8,30 @@ export function Processing() {
     usePdfStore();
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-surf-2 px-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
         className="w-full max-w-md text-center"
       >
-        {/* Spinner */}
         <div className="flex justify-center mb-8">
           <motion.div
-            className="w-16 h-16 border-4 border-slate-700 border-t-indigo-500 rounded-full"
+            className="w-16 h-16 border-4 border-bdr border-t-acc rounded-full"
             animate={{ rotate: 360 }}
-            transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 0.7, repeat: Infinity, ease: "linear" }}
           />
         </div>
 
-        <h2 className="text-white text-2xl font-semibold mb-2">
+        <h2 className="text-ink-1 text-2xl font-semibold mb-2">
           Splitting PDF…
         </h2>
-        <p className="text-slate-500 mb-8">
+        <p className="text-ink-3 mb-8">
           Writing file {processingCurrent + 1} of {processingTotal}
         </p>
 
         <ProgressBar value={processingProgress} className="w-full" />
-        <div className="mt-2 text-slate-500 text-sm text-right">
+        <div className="mt-2 text-ink-3 text-sm text-right">
           {Math.round(processingProgress * 100)}%
         </div>
       </motion.div>
@@ -47,7 +46,6 @@ export function Complete() {
     if (saveDirectory) {
       await window.electronAPI.openPath(saveDirectory);
     } else if (outputFilePaths.length > 0) {
-      // Open parent directory of first file
       const dir = outputFilePaths[0]
         .replace(/\\/g, "/")
         .split("/")
@@ -58,32 +56,35 @@ export function Complete() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-surf-2 px-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-lg text-center"
       >
-        {/* Animated checkmark */}
         <CheckmarkCircle />
 
-        <h2 className="text-white text-3xl font-bold mb-3">Done!</h2>
-        <p className="text-slate-400 text-lg mb-8">
+        <h2 className="text-ink-1 text-3xl font-bold mb-3">Done!</h2>
+        <p className="text-ink-2 text-lg mb-8">
           {outputFilePaths.length} file{outputFilePaths.length !== 1 ? "s" : ""}{" "}
           created successfully
         </p>
 
-        {/* File list */}
-        <div className="text-left space-y-2 mb-8">
+        <motion.div
+          className="text-left space-y-2 mb-8"
+          initial="hidden"
+          animate="visible"
+          variants={{ visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}
+        >
           {outputFilePaths.map((fp) => {
             const name = fp.replace(/\\/g, "/").split("/").pop() ?? fp;
             return (
               <motion.div
                 key={fp}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3 bg-slate-800/60 border border-slate-700/50 rounded-lg px-4 py-3"
+                variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+                className="flex items-center gap-3 bg-surf-1/60 border border-bdr rounded-lg px-4 py-3"
               >
                 <svg
                   width="16"
@@ -96,13 +97,13 @@ export function Complete() {
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
-                <span className="text-white text-sm font-mono flex-1 truncate">
+                <span className="text-ink-1 text-sm font-mono flex-1 truncate">
                   {name}
                 </span>
               </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         <div className="flex items-center justify-center gap-4">
           <Button variant="secondary" onClick={reset}>
@@ -130,10 +131,6 @@ export function Complete() {
 export function ErrorScreen() {
   const { errorMessage, reset, setPhase, loadedPdf, groups } = usePdfStore();
 
-  // Determine the most useful "Try Again" destination based on what state exists.
-  // If no PDF is loaded yet the error was during file loading — go back to drop zone.
-  // If a PDF is loaded but no groups, go back to page selection.
-  // Otherwise go back to output config to retry the split.
   const retryPhase = !loadedPdf
     ? "drop"
     : groups.some((g) => g.pageIndices.length > 0)
@@ -148,7 +145,7 @@ export function ErrorScreen() {
         : "Try Again";
 
   return (
-    <div className="flex flex-col items-center justify-center h-full bg-slate-900 px-8">
+    <div className="flex flex-col items-center justify-center h-full bg-surf-2 px-8">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -167,10 +164,10 @@ export function ErrorScreen() {
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </div>
-        <h2 className="text-white text-2xl font-semibold mb-3">
+        <h2 className="text-ink-1 text-2xl font-semibold mb-3">
           Something went wrong
         </h2>
-        <p className="text-slate-400 mb-8 text-sm font-mono bg-slate-800 rounded-lg px-4 py-3 text-left break-all">
+        <p className="text-ink-2 mb-8 text-sm font-mono bg-surf-1 rounded-lg px-4 py-3 text-left break-all select-text cursor-text">
           {errorMessage}
         </p>
         <div className="flex items-center justify-center gap-4">

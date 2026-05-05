@@ -136,17 +136,14 @@ export function OutputConfig() {
 
   // ── Directory resolution ──────────────────────────────────────────────────
   const getEffectiveDir = (group: PageGroup): string => {
-    // Individual override always wins
     if (dirOverrides.has(group.id)) return outputDirs[group.id] ?? "";
 
-    // Meta group shared dir takes effect when the group belongs to a meta group
     if (group.metaGroupId) {
       const mgState = metaGroupDirs[group.metaGroupId];
       if (mgState?.applyToAll) return mgState.dir;
       return outputDirs[group.id] ?? "";
     }
 
-    // Global "same for all" applies only to standalone groups
     if (applyDirToAll) return saveDirectory;
 
     return outputDirs[group.id] ?? "";
@@ -255,12 +252,12 @@ export function OutputConfig() {
   const webviewSrc = `file://${loadedPdf.filePath.replace(/\\/g, "/")}#page=${webviewPage + 1}&view=FitH`;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900">
+    <div className="flex flex-col h-full bg-surf-2">
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center px-6 py-4 border-b border-slate-700/60 flex-shrink-0">
+      <div className="flex items-center px-6 py-4 border-b border-bdr-hi flex-shrink-0">
         <button
           onClick={() => setPhase("selecting")}
-          className="text-slate-500 hover:text-slate-300 transition-colors mr-4"
+          className="text-ink-3 hover:text-ink-2 transition-colors cursor-pointer mr-4"
         >
           <svg
             width="20"
@@ -274,8 +271,8 @@ export function OutputConfig() {
           </svg>
         </button>
         <div className="flex-1">
-          <h1 className="text-white font-semibold text-lg">Configure Output</h1>
-          <p className="text-slate-500 text-sm">
+          <h1 className="text-ink-1 font-semibold text-lg">Configure Output</h1>
+          <p className="text-ink-4 text-sm">
             Name your files and choose save locations
           </p>
         </div>
@@ -286,14 +283,14 @@ export function OutputConfig() {
         {/* ── Webview ─────────────────────────────────────────────────── */}
         <div
           ref={webviewPanelRef}
-          className="flex flex-col min-w-0 min-h-0 border-r border-slate-700/60"
+          className="flex flex-col min-w-0 min-h-0 border-r border-bdr-hi"
           style={{ flex: 1 }}
         >
-          <div className="px-4 py-2 border-b border-slate-800/60 flex-shrink-0 flex items-center justify-between">
-            <span className="text-slate-600 text-xs">PDF Preview</span>
-            <span className="text-slate-500 text-xs tabular-nums">
+          <div className="px-4 py-2 border-b border-bdr flex-shrink-0 flex items-center justify-between">
+            <span className="text-ink-4 text-xs">PDF Preview</span>
+            <span className="text-ink-3 text-xs tabular-nums">
               Page {webviewPage + 1}
-              <span className="text-slate-700"> / {loadedPdf.totalPages}</span>
+              <span className="text-ink-4"> / {loadedPdf.totalPages}</span>
             </span>
           </div>
           <div className="flex-1 relative overflow-hidden min-h-0">
@@ -311,13 +308,14 @@ export function OutputConfig() {
 
         {/* ── Resize handle ────────────────────────────────────────────── */}
         <div
-          className="w-1 flex-shrink-0 bg-slate-700/40 hover:bg-indigo-500/50 active:bg-indigo-500/70 cursor-col-resize transition-colors"
+          className="w-1 flex-shrink-0 bg-bdr/40 hover:bg-acc/50 active:bg-acc/70 cursor-col-resize transition-colors"
           onMouseDown={handleDividerMouseDown}
         />
 
         {/* ── Config panel ─────────────────────────────────────────────── */}
         <div
           ref={configPanelRef}
+          data-tour="output-config"
           className="flex flex-col min-h-0"
           style={{ flex: configPanelFlex, minWidth: 0 }}
         >
@@ -330,15 +328,15 @@ export function OutputConfig() {
               className="space-y-5"
             >
               {/* Source info */}
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+              <div className="bg-surf-1/50 border border-bdr/50 rounded-xl p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-lg bg-acc/15 flex items-center justify-center flex-shrink-0">
                     <svg
                       width="20"
                       height="20"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#818cf8"
+                      stroke="var(--acc)"
                       strokeWidth="2"
                     >
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -346,15 +344,15 @@ export function OutputConfig() {
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-white font-medium truncate">
+                    <div className="text-ink-1 font-medium truncate">
                       {loadedPdf.fileName}
                     </div>
-                    <div className="text-slate-500 text-sm">
+                    <div className="text-ink-4 text-sm">
                       {loadedPdf.totalPages} pages ·{" "}
                       {formatBytes(loadedPdf.fileSizeBytes)}
                     </div>
                   </div>
-                  <div className="text-indigo-400 font-semibold text-lg flex-shrink-0">
+                  <div className="text-acc font-semibold text-lg flex-shrink-0">
                     → {activeGroups.length}
                   </div>
                 </div>
@@ -374,23 +372,22 @@ export function OutputConfig() {
 
                 return (
                   <div key={metaGroup.id}>
-                    {/* Meta group header */}
                     <div
-                      className="rounded-xl border border-slate-700/50 overflow-hidden"
-                      style={{
-                        borderLeftColor: metaGroup.color,
-                        borderLeftWidth: 3,
-                      }}
+                      className="rounded-xl overflow-hidden"
+                      style={{ border: `1px solid ${metaGroup.color}50` }}
                     >
-                      <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-800/70">
+                      <div
+                        className="flex items-center gap-3 px-4 py-2.5"
+                        style={{ backgroundColor: `${metaGroup.color}18` }}
+                      >
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0"
                           style={{ backgroundColor: metaGroup.color }}
                         />
-                        <span className="text-slate-200 font-semibold text-sm flex-1 truncate">
+                        <span className="text-ink-1 font-semibold text-sm flex-1 truncate">
                           {metaGroup.name}
                         </span>
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-ink-4 text-xs">
                           {mgActiveGroups.length} file
                           {mgActiveGroups.length !== 1 ? "s" : ""}
                         </span>
@@ -408,7 +405,6 @@ export function OutputConfig() {
                                   },
                                 }));
                                 if (!e.target.checked) {
-                                  // Clear individual overrides for this meta group's files
                                   setDirOverrides((prev) => {
                                     const next = new Set(prev);
                                     mgActiveGroups.forEach((g) =>
@@ -418,9 +414,9 @@ export function OutputConfig() {
                                   });
                                 }
                               }}
-                              className="w-3 h-3 rounded accent-indigo-500 cursor-pointer"
+                              className="w-3 h-3 rounded accent-[var(--acc)] cursor-pointer"
                             />
-                            <span className="text-slate-500 group-hover/toggle:text-slate-300 text-xs transition-colors">
+                            <span className="text-ink-4 group-hover/toggle:text-ink-2 text-xs transition-colors">
                               Same location
                             </span>
                           </label>
@@ -429,13 +425,13 @@ export function OutputConfig() {
 
                       {/* Shared dir for meta group */}
                       {mgState.applyToAll && mgActiveGroups.length > 1 && (
-                        <div className="flex items-center gap-2 mx-4 mb-3 mt-1 p-3 bg-slate-800/60 border border-indigo-500/30 rounded-xl">
+                        <div className="flex items-center gap-2 mx-4 mb-3 mt-1 p-3 bg-surf-1/60 border border-acc/30 rounded-xl">
                           <div
-                            className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-300 truncate min-w-0 cursor-default"
+                            className="flex-1 bg-ctrl border border-bdr rounded-lg px-3 py-1.5 text-sm font-mono text-ink-2 truncate min-w-0 cursor-default"
                             title={mgState.dir}
                           >
                             {mgState.dir || (
-                              <span className="text-slate-500 italic">
+                              <span className="text-ink-4 italic">
                                 No folder selected
                               </span>
                             )}
@@ -444,7 +440,7 @@ export function OutputConfig() {
                             onClick={() =>
                               handleChooseMetaGroupDir(metaGroup.id)
                             }
-                            className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                            className="px-3 py-1.5 rounded-lg bg-ctrl hover:bg-ctrl-hi border border-bdr text-ink-2 hover:text-ink-1 text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
                           >
                             Browse…
                           </button>
@@ -452,7 +448,7 @@ export function OutputConfig() {
                       )}
 
                       {/* Member group cards */}
-                      <div className="px-3 pb-3 space-y-2 bg-slate-900/30">
+                      <div className="px-3 pb-3 space-y-2 bg-surf-3/20">
                         {mgActiveGroups.map((group) => (
                           <GroupOutputCard
                             key={group.id}
@@ -489,7 +485,7 @@ export function OutputConfig() {
               {standaloneGroups.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-slate-300 text-sm font-medium">
+                    <h2 className="text-ink-2 text-sm font-medium">
                       {metaGroups.length > 0
                         ? `Standalone Files (${standaloneGroups.length})`
                         : `Output Files (${standaloneGroups.length})`}
@@ -503,9 +499,9 @@ export function OutputConfig() {
                             setApplyDirToAll(e.target.checked);
                             if (!e.target.checked) setDirOverrides(new Set());
                           }}
-                          className="w-3 h-3 rounded accent-indigo-500 cursor-pointer"
+                          className="w-3 h-3 rounded accent-[var(--acc)] cursor-pointer"
                         />
-                        <span className="text-slate-500 group-hover/toggle:text-slate-300 text-xs transition-colors">
+                        <span className="text-ink-4 group-hover/toggle:text-ink-2 text-xs transition-colors">
                           Same location for all
                         </span>
                       </label>
@@ -513,20 +509,20 @@ export function OutputConfig() {
                   </div>
 
                   {applyDirToAll && standaloneGroups.length > 1 && (
-                    <div className="flex items-center gap-2 mb-3 p-3 bg-slate-800/60 border border-indigo-500/30 rounded-xl">
+                    <div className="flex items-center gap-2 mb-3 p-3 bg-surf-1/60 border border-acc/30 rounded-xl">
                       <div
-                        className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm font-mono text-slate-300 truncate min-w-0 cursor-default"
+                        className="flex-1 bg-ctrl border border-bdr rounded-lg px-3 py-1.5 text-sm font-mono text-ink-2 truncate min-w-0 cursor-default"
                         title={saveDirectory}
                       >
                         {saveDirectory || (
-                          <span className="text-slate-500 italic">
+                          <span className="text-ink-4 italic">
                             No folder selected
                           </span>
                         )}
                       </div>
                       <button
                         onClick={handleChooseDirForAll}
-                        className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-ctrl hover:bg-ctrl-hi border border-bdr text-ink-2 hover:text-ink-1 text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
                       >
                         Browse…
                       </button>
@@ -576,7 +572,7 @@ export function OutputConfig() {
                       height="18"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#f59e0b"
+                      stroke="var(--warn-icon)"
                       strokeWidth="2"
                       className="flex-shrink-0 mt-0.5"
                     >
@@ -584,7 +580,7 @@ export function OutputConfig() {
                       <line x1="12" y1="9" x2="12" y2="13" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
-                    <div className="text-sm text-amber-300">
+                    <div className="text-sm text-warn">
                       <strong>
                         {skipped} unassigned page{skipped !== 1 ? "s" : ""}
                       </strong>{" "}
@@ -598,12 +594,13 @@ export function OutputConfig() {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-4 border-t border-slate-700/60 flex-shrink-0">
-            <div className="text-slate-500 text-sm">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-bdr-hi flex-shrink-0">
+            <div className="text-ink-4 text-sm">
               {activeGroups.length} file
               {activeGroups.length !== 1 ? "s" : ""} will be created
             </div>
             <Button
+              data-tour="process-btn"
               variant="primary"
               size="lg"
               disabled={!canStart || isProcessing}
@@ -661,8 +658,8 @@ function GroupOutputCard({
 
   return (
     <div
-      className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 cursor-default"
-      style={{ borderLeftColor: group.color, borderLeftWidth: 3 }}
+      className="bg-surf-1/60 rounded-xl p-4 cursor-default"
+      style={{ border: `1px solid ${group.color}50` }}
       onMouseEnter={onNavigate}
     >
       {/* Group label row */}
@@ -671,8 +668,8 @@ function GroupOutputCard({
           className="w-3 h-3 rounded-full flex-shrink-0"
           style={{ backgroundColor: group.color }}
         />
-        <span className="text-white font-medium text-sm">{group.name}</span>
-        <span className="text-slate-500 text-xs ml-auto">
+        <span className="text-ink-1 font-medium text-sm">{group.name}</span>
+        <span className="text-ink-4 text-xs ml-auto">
           {group.pageIndices.length} pages:{" "}
           {indicesToRangeString(group.pageIndices)}
         </span>
@@ -684,10 +681,10 @@ function GroupOutputCard({
           type="text"
           value={outputFile.outputFileName}
           onChange={(e) => onUpdateFileName(e.target.value)}
-          className="flex-1 bg-slate-700 border border-slate-600 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-w-0 font-mono"
+          className="flex-1 bg-ctrl border border-bdr text-ink-1 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-acc focus:border-transparent min-w-0 font-mono"
           placeholder="output-filename"
         />
-        <span className="text-slate-500 text-sm">.pdf</span>
+        <span className="text-ink-4 text-sm">.pdf</span>
       </div>
 
       {/* Save location override toggle — only shown when "same location" is active */}
@@ -697,9 +694,9 @@ function GroupOutputCard({
             type="checkbox"
             checked={isOverride}
             onChange={onToggleDirOverride}
-            className="w-3.5 h-3.5 rounded accent-indigo-500 cursor-pointer"
+            className="w-3.5 h-3.5 rounded accent-[var(--acc)] cursor-pointer"
           />
-          <span className="text-xs text-slate-500 mb-1 group-hover/override:text-slate-300 transition-colors">
+          <span className="text-xs text-ink-4 mb-1 group-hover/override:text-ink-2 transition-colors">
             Save to a different folder
           </span>
         </label>
@@ -709,16 +706,16 @@ function GroupOutputCard({
       {showDirPicker && (
         <div className="flex items-center gap-2 mt-1">
           <div
-            className="flex-1 bg-slate-900/60 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-400 truncate min-w-0 cursor-default"
+            className="flex-1 bg-surf-3/60 border border-bdr rounded-lg px-3 py-1.5 text-xs font-mono text-ink-3 truncate min-w-0 cursor-default"
             title={outputDirs[group.id] ?? ""}
           >
             {outputDirs[group.id] || (
-              <span className="text-slate-600 italic">No folder selected</span>
+              <span className="text-ink-4 italic">No folder selected</span>
             )}
           </div>
           <button
             onClick={onChooseDir}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-400 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+            className="px-2.5 py-1.5 rounded-lg bg-ctrl hover:bg-ctrl-hi border border-bdr text-ink-3 hover:text-ink-1 text-xs font-medium transition-colors flex-shrink-0 cursor-pointer"
           >
             Browse…
           </button>
@@ -727,7 +724,7 @@ function GroupOutputCard({
 
       {/* Full path preview */}
       {effectiveDir && (
-        <div className="mt-1.5 text-slate-600 text-xs font-mono truncate">
+        <div className="mt-1.5 text-ink-4 text-xs font-mono truncate">
           {effectiveDir}/{outputFile.outputFileName || "…"}.pdf
         </div>
       )}

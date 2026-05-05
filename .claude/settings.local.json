@@ -28,7 +28,12 @@
       "Bash(xxd:*)",
       "Bash(node:*)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run *)",
+      "Bash(git tag *)",
+      "Bash(git push *)",
+      "Bash(clear *)",
+      "Bash(python3 *)"
     ]
   }
 }

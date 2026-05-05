@@ -36,7 +36,7 @@ export function Tooltip({ content, children, side = "top" }: TooltipProps) {
         <div
           className={`absolute z-50 pointer-events-none ${positionClasses[side]}`}
         >
-          <div className="bg-slate-900 border border-slate-700 text-slate-200 text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-lg">
+          <div className="bg-surf-3 border border-bdr-hi text-ink-2 text-xs px-2 py-1 rounded-md whitespace-nowrap shadow-lg">
             {content}
           </div>
         </div>

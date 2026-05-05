@@ -25,6 +25,17 @@ export interface SplitProgressEvent {
   done?: boolean;
 }
 
+export interface UpdateInfo {
+  version: string;
+  releaseDate?: string;
+}
+
+export interface DownloadProgress {
+  percent: number;
+  transferred: number;
+  total: number;
+}
+
 export interface ElectronAppAPI {
   openPdfDialog(): Promise<string | null>;
   getPdfInfo(
@@ -36,6 +47,13 @@ export interface ElectronAppAPI {
   splitPdf(params: SplitPdfParams): Promise<SplitPdfResult>;
   openPath(pathToOpen: string): Promise<void>;
   onSplitProgress(callback: (event: SplitProgressEvent) => void): () => void;
+  onUpdateAvailable(callback: (info: UpdateInfo) => void): () => void;
+  onUpdateProgress(callback: (progress: DownloadProgress) => void): () => void;
+  onUpdateDownloaded(callback: (info: UpdateInfo) => void): () => void;
+  onUpdateError(callback: (message: string) => void): () => void;
+  downloadUpdate(): Promise<void>;
+  installUpdate(): void;
+  getDemoPdfPath(): Promise<string>;
 }
 
 declare global {

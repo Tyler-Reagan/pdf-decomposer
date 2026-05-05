@@ -8,6 +8,10 @@ directories:
 files:
   - out/**/*
 
+extraResources:
+  - from: resources/demo.pdf
+    to: demo.pdf
+
 win:
   requestedExecutionLevel: asInvoker
   signtoolOptions:
@@ -32,7 +36,7 @@ nsis:
   createStartMenuShortcut: true
 
 portable:
-  artifactName: PDFDecomposer-portable.exe
+  artifactName: PDFDecomposer-${version}-portable.exe
 
 mac:
   target:

@@ -5,11 +5,9 @@ import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
 
-// nodeGridFlex is the flex value of the node grid relative to the webview's flex: 1.
-// e.g. 0.35 → nodeGrid gets 26% of shared space, webview gets 74%.
 const NODE_GRID_FLEX_DEFAULT = 0.35;
-const NODE_GRID_FLEX_MIN = 0.08; // very narrow nodes, large preview
-const NODE_GRID_FLEX_MAX = 1.4; // wide nodes, narrow preview
+const NODE_GRID_FLEX_MIN = 0.08;
+const NODE_GRID_FLEX_MAX = 1.4;
 
 export function PageSelector() {
   const {
@@ -60,18 +58,12 @@ export function PageSelector() {
     return stableNodeRefCallbacks.current.get(pageIndex)!;
   }, []);
 
-  // Resize: measure the two panels, recompute their flex ratio from the new widths.
-  // Dragging right → webview grows (nodeGridFlex shrinks).
-  // Dragging left  → node grid grows (nodeGridFlex increases).
   const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     const wvEl = webviewPanelRef.current;
     const ngEl = nodeGridPanelRef.current;
     if (!wvEl || !ngEl) return;
 
-    // Prevent the webview's separate renderer process from capturing pointer
-    // events mid-drag. Without this, mousing over the webview causes the OS to
-    // redirect events to the webview process and the drag handler goes silent.
     wvEl.style.pointerEvents = "none";
 
     const startX = e.clientX;
@@ -98,7 +90,6 @@ export function PageSelector() {
     window.addEventListener("mouseup", onUp);
   }, []);
 
-  // Debounced webview navigation
   const webviewNavTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigateWebview = useCallback((pageIndex: number) => {
     if (webviewNavTimer.current) clearTimeout(webviewNavTimer.current);
@@ -169,7 +160,6 @@ export function PageSelector() {
     [],
   );
 
-  // Shared lasso hit-test — called from both mouse-move and the auto-scroll RAF.
   const applyLasso = useCallback(
     (clientX: number, clientY: number) => {
       if (!lassoOriginRef.current) return;
@@ -223,9 +213,9 @@ export function PageSelector() {
   }, []);
 
   const startAutoScroll = useCallback(() => {
-    if (autoScrollRafRef.current !== null) return; // already ticking
-    const ZONE = 96; // px from edge where scrolling begins
-    const MAX_SPEED = 14; // px per frame at edge
+    if (autoScrollRafRef.current !== null) return;
+    const ZONE = 96;
+    const MAX_SPEED = 14;
 
     const tick = () => {
       const el = scrollContainerRef.current;
@@ -279,20 +269,18 @@ export function PageSelector() {
   if (!loadedPdf) return null;
 
   const totalPages = loadedPdf.totalPages;
-  // FitH fits the page to the panel's width — content always fills horizontally
-  // regardless of panel size, and you see more pages as the panel gets taller.
   const webviewSrc = `file://${loadedPdf.filePath.replace(/\\/g, "/")}#page=${webviewPage + 1}&view=FitH`;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 select-none">
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex items-center px-6 py-4 border-b border-slate-700/60 flex-shrink-0 gap-4">
+    <div className="flex flex-col h-full bg-surf-2 select-none">
+      {/* Header */}
+      <div className="flex items-center px-6 py-4 border-b border-bdr-hi flex-shrink-0 gap-4">
         <button
           onClick={() => {
             clearSelection();
             setPhase("drop");
           }}
-          className="text-slate-500 hover:text-slate-300 transition-colors"
+          className="text-ink-3 hover:text-ink-2 transition-colors cursor-pointer"
           title="Back"
         >
           <svg
@@ -308,15 +296,15 @@ export function PageSelector() {
         </button>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-white font-semibold text-lg truncate">
+          <h1 className="text-ink-1 font-semibold text-lg truncate">
             {loadedPdf.fileName}
           </h1>
-          <p className="text-slate-500 text-sm">{totalPages} pages</p>
+          <p className="text-ink-3 text-sm">{totalPages} pages</p>
         </div>
 
         <div className="flex items-center gap-3 flex-shrink-0">
           {selectedPageIndices.size > 0 && (
-            <span className="text-slate-500 text-sm">
+            <span className="text-ink-3 text-sm">
               {selectedPageIndices.size} selected
             </span>
           )}
@@ -324,6 +312,7 @@ export function PageSelector() {
             variant="primary"
             disabled={!canContinue}
             onClick={() => setPhase("configuring")}
+            data-tour="configure-output-btn"
           >
             Configure Output
             <svg
@@ -340,22 +329,21 @@ export function PageSelector() {
         </div>
       </div>
 
-      {/* ── Content row ──────────────────────────────────────────────────── */}
+      {/* Content row */}
       <div className="flex flex-1 min-h-0">
-        {/* ── Webview (flex-1, always fills remaining space) ───────────── */}
+        {/* Webview */}
         <div
           ref={webviewPanelRef}
-          className="flex flex-col min-w-0 min-h-0 border-r border-slate-700/60"
+          className="flex flex-col min-w-0 min-h-0 border-r border-bdr-hi"
           style={{ flex: 1 }}
         >
-          <div className="px-4 py-2 border-b border-slate-800/60 flex-shrink-0 flex items-center justify-between">
-            <span className="text-slate-600 text-xs">PDF Preview</span>
-            <span className="text-slate-500 text-xs tabular-nums">
+          <div className="px-4 py-2 border-b border-bdr flex-shrink-0 flex items-center justify-between">
+            <span className="text-ink-4 text-xs">PDF Preview</span>
+            <span className="text-ink-3 text-xs tabular-nums">
               Page {webviewPage + 1}
-              <span className="text-slate-700"> / {totalPages}</span>
+              <span className="text-ink-4"> / {totalPages}</span>
             </span>
           </div>
-          {/* Relative container bounds the webview — absolute fill prevents flex sizing bugs */}
           <div className="flex-1 relative overflow-hidden min-h-0">
             <webview
               src={webviewSrc}
@@ -369,24 +357,25 @@ export function PageSelector() {
           </div>
         </div>
 
-        {/* ── Resize handle ───────────────────────────────────────────── */}
+        {/* Resize handle */}
         <div
-          className="w-1 flex-shrink-0 bg-slate-700/40 hover:bg-indigo-500/50 active:bg-indigo-500/70 cursor-col-resize transition-colors"
+          className="w-1 flex-shrink-0 bg-bdr/40 hover:bg-acc/50 active:bg-acc/70 cursor-col-resize transition-colors"
           onMouseDown={handleDividerMouseDown}
         />
 
-        {/* ── Node grid (flex-ratio, scales with divider) ──────────────── */}
+        {/* Node grid */}
         <div
           ref={nodeGridPanelRef}
           className="flex flex-col min-h-0 relative"
           style={{ flex: nodeGridFlex, minWidth: 0 }}
         >
-          <div className="px-3 py-2 text-slate-600 text-xs border-b border-slate-800/60 flex-shrink-0">
+          <div className="px-3 py-2 text-ink-4 text-xs border-b border-bdr flex-shrink-0">
             Click · Shift · Ctrl · Drag to lasso
           </div>
 
           <div
             ref={scrollContainerRef}
+            data-tour="page-grid"
             className="flex-1 overflow-y-auto relative"
             onMouseMove={handleGridMouseMove}
             onMouseUp={handleGridMouseUp}
@@ -412,7 +401,7 @@ export function PageSelector() {
 
             {lasso && (
               <div
-                className="absolute pointer-events-none border border-indigo-400 bg-indigo-500/10 z-20"
+                className="absolute pointer-events-none border border-acc bg-acc/10 z-20"
                 style={{
                   left: lasso.x,
                   top: lasso.y,
@@ -428,8 +417,8 @@ export function PageSelector() {
           />
         </div>
 
-        {/* ── Group panel ─────────────────────────────────────────────── */}
-        <div className="w-72 flex-shrink-0 border-l border-slate-700/60 bg-slate-900/80">
+        {/* Group panel */}
+        <div data-tour="group-panel" className="w-72 flex-shrink-0 border-l border-bdr-hi bg-surf-2/80">
           <GroupPanel />
         </div>
       </div>

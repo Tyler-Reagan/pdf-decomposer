@@ -97,9 +97,18 @@ const api = {
     return () => ipcRenderer.removeListener("update-downloaded", handler);
   },
 
+  onUpdateError: (callback: (message: string) => void): (() => void) => {
+    const handler = (_: Electron.IpcRendererEvent, message: string): void =>
+      callback(message);
+    ipcRenderer.on("update-error", handler);
+    return () => ipcRenderer.removeListener("update-error", handler);
+  },
+
   downloadUpdate: (): Promise<void> => ipcRenderer.invoke("download-update"),
 
   installUpdate: (): void => ipcRenderer.send("install-update"),
+
+  getDemoPdfPath: (): Promise<string> => ipcRenderer.invoke("get-demo-pdf-path"),
 };
 
 if (process.contextIsolated) {

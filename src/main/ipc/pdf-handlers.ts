@@ -4,6 +4,13 @@ import * as path from "path";
 import { PDFDocument } from "pdf-lib";
 import { splitPdf, SplitPdfParams } from "../utils/pdf-splitter";
 
+// Reject null bytes which can be used to truncate paths on some systems.
+function assertSafePath(filePath: string): void {
+  if (filePath.includes("\0")) {
+    throw new Error("Invalid file path");
+  }
+}
+
 export function registerPdfHandlers(): void {
   // Open file dialog
   ipcMain.handle("open-pdf-dialog", async () => {
@@ -21,6 +28,7 @@ export function registerPdfHandlers(): void {
 
   // Get PDF info (page count, file size)
   ipcMain.handle("get-pdf-info", async (_event, filePath: string) => {
+    assertSafePath(filePath);
     try {
       const bytes = fs.readFileSync(filePath);
       const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
@@ -37,6 +45,7 @@ export function registerPdfHandlers(): void {
 
   // Read raw PDF bytes (for renderer/worker)
   ipcMain.handle("read-pdf-file", async (_event, filePath: string) => {
+    assertSafePath(filePath);
     try {
       const bytes = fs.readFileSync(filePath);
       return bytes;
@@ -55,7 +64,11 @@ export function registerPdfHandlers(): void {
     async (_event, data: Buffer, originalName: string) => {
       const dir = path.join(app.getPath("temp"), "pdf-decomposer");
       fs.mkdirSync(dir, { recursive: true });
-      const dest = path.join(dir, originalName);
+      // Strip directory components and disallowed characters from the filename.
+      const safeName = path
+        .basename(originalName)
+        .replace(/[/\\<>:"|?*\0]/g, "_");
+      const dest = path.join(dir, safeName);
       fs.writeFileSync(dest, data);
       return dest;
     },
@@ -66,8 +79,18 @@ export function registerPdfHandlers(): void {
     return splitPdf(params);
   });
 
-  // Open path in Explorer/Finder
+  // Open path in Explorer/Finder — restricted to directories only.
   ipcMain.handle("open-path", async (_event, pathToOpen: string) => {
+    assertSafePath(pathToOpen);
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(pathToOpen);
+    } catch {
+      throw new Error("Path does not exist");
+    }
+    if (!stat.isDirectory()) {
+      throw new Error("Path is not a directory");
+    }
     const { shell } = await import("electron");
     await shell.openPath(pathToOpen);
   });
