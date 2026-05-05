@@ -5,27 +5,27 @@
 @import "@fontsource/inter/700.css";
 
 /* ── Palette tokens ──────────────────────────────────────────────────────── */
-/* Dark (default) — professional blue-gray, Office Blue accent, H=232       */
+/* Dark (default) — charcoal blue-gray, Office Blue accent, H=232            */
 :root {
-  /* Surfaces */
-  --surf-1: oklch(0.21 0.010 232);
-  --surf-2: oklch(0.16 0.009 232);
-  --surf-3: oklch(0.11 0.007 232);
+  /* Surfaces — charcoal/slate range, not near-black */
+  --surf-1: oklch(0.28 0.013 232);
+  --surf-2: oklch(0.22 0.011 232);
+  --surf-3: oklch(0.17 0.009 232);
   /* Interactive controls (inputs, secondary buttons) */
-  --ctrl: oklch(0.27 0.012 232);
-  --ctrl-hi: oklch(0.33 0.013 232);
+  --ctrl: oklch(0.34 0.013 232);
+  --ctrl-hi: oklch(0.40 0.014 232);
   /* Borders */
-  --bdr: oklch(0.29 0.012 232);
-  --bdr-hi: oklch(0.40 0.012 232);
+  --bdr: oklch(0.36 0.013 232);
+  --bdr-hi: oklch(0.48 0.013 232);
   /* Accent — true blue (Office Blue territory), not purple-leaning indigo */
   --acc: oklch(0.56 0.19 232);
   --acc-hi: oklch(0.63 0.18 232);
   --acc-dk: oklch(0.47 0.19 232);
   /* Text */
-  --ink-1: oklch(0.95 0.006 232);
+  --ink-1: oklch(0.93 0.006 232);
   --ink-2: oklch(0.72 0.012 232);
-  --ink-3: oklch(0.52 0.010 232);
-  --ink-4: oklch(0.38 0.010 232);
+  --ink-3: oklch(0.54 0.010 232);
+  --ink-4: oklch(0.42 0.010 232);
   /* Warning — amber, legible on dark surfaces */
   --warn: oklch(0.83 0.14 85);
   --warn-icon: #f59e0b;
