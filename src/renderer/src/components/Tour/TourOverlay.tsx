@@ -373,7 +373,7 @@ export function TourOverlay() {
                   <motion.p
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="mt-3 text-amber-400/80 text-[11px] leading-snug"
+                    className="mt-3 text-[11px] leading-snug" style={{ color: "var(--warn)" }}
                   >
                     {stepIndex === 0
                       ? "Load a PDF to continue the tour."

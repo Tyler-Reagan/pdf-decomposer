@@ -26,6 +26,9 @@
   --ink-2: oklch(0.72 0.012 232);
   --ink-3: oklch(0.52 0.010 232);
   --ink-4: oklch(0.38 0.010 232);
+  /* Warning — amber, legible on dark surfaces */
+  --warn: oklch(0.83 0.14 85);
+  --warn-icon: #f59e0b;
 
   /* Legacy aliases — referenced inline by DropZone motion.animate */
   --color-surface-1: var(--surf-1);
@@ -61,8 +64,11 @@
   --acc-dk: oklch(0.41 0.19 232);
   --ink-1: oklch(0.17 0.008 232);
   --ink-2: oklch(0.37 0.012 232);
-  --ink-3: oklch(0.53 0.010 232);
-  --ink-4: oklch(0.68 0.010 232);
+  --ink-3: oklch(0.40 0.010 232);
+  --ink-4: oklch(0.54 0.010 232);
+  /* Warning — amber darkened for legibility on light surfaces */
+  --warn: oklch(0.52 0.14 55);
+  --warn-icon: oklch(0.52 0.14 55);
 
   --color-accent: var(--acc);
   --color-accent-muted: oklch(0.49 0.19 232 / 0.10);
@@ -87,6 +93,7 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-ink-4: var(--ink-4);
+  --color-warn: var(--warn);
 }
 
 @layer base {

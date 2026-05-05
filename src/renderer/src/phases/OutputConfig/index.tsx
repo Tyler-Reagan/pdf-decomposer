@@ -572,7 +572,7 @@ export function OutputConfig() {
                       height="18"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#f59e0b"
+                      stroke="var(--warn-icon)"
                       strokeWidth="2"
                       className="flex-shrink-0 mt-0.5"
                     >
@@ -580,7 +580,7 @@ export function OutputConfig() {
                       <line x1="12" y1="9" x2="12" y2="13" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
-                    <div className="text-sm text-amber-300">
+                    <div className="text-sm text-warn">
                       <strong>
                         {skipped} unassigned page{skipped !== 1 ? "s" : ""}
                       </strong>{" "}
