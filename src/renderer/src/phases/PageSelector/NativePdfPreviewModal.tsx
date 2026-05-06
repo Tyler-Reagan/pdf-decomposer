@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { pathToFileUrl } from "../../lib/pathToFileUrl";
+import { useWebviewPdfPage } from "../../lib/useWebviewPdfPage";
 
 interface NativePdfPreviewModalProps {
   filePath: string;
@@ -19,7 +20,14 @@ export function NativePdfPreviewModal({
   const [loading, setLoading] = useState(true);
   const webviewRef = useRef<HTMLElement>(null);
 
-  const src = `${pathToFileUrl(filePath)}#page=${currentPage}`;
+  // Pin the src to the file path; page changes navigate via location.hash
+  // inside the guest, avoiding a full PDF reload on every step.
+  const src = useMemo(
+    () => `${pathToFileUrl(filePath)}#page=${initialPage + 1}`,
+    [filePath, initialPage],
+  );
+
+  useWebviewPdfPage(webviewRef, currentPage, "Fit");
 
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
@@ -45,16 +53,13 @@ export function NativePdfPreviewModal({
   }, [onClose, totalPages]);
 
   useEffect(() => {
-    setLoading(true);
-    const el = webviewRef.current as
-      | (HTMLElement & { addEventListener: HTMLElement["addEventListener"] })
-      | null;
+    const el = webviewRef.current;
     if (!el) return;
     const onFinish = (): void => setLoading(false);
     el.addEventListener("did-finish-load", onFinish as EventListener);
     return () =>
       el.removeEventListener("did-finish-load", onFinish as EventListener);
-  }, [src]);
+  }, []);
 
   const goTo = (page: number): void =>
     setCurrentPage(Math.max(1, Math.min(totalPages, page)));

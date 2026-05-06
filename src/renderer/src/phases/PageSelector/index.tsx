@@ -1,10 +1,11 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
 import { pathToFileUrl } from "../../lib/pathToFileUrl";
+import { useWebviewPdfPage } from "../../lib/useWebviewPdfPage";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -36,6 +37,7 @@ export function PageSelector() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const webviewPanelRef = useRef<HTMLDivElement>(null);
+  const webviewElRef = useRef<HTMLElement>(null);
   const nodeGridPanelRef = useRef<HTMLDivElement>(null);
   const autoScrollRafRef = useRef<number | null>(null);
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -267,10 +269,22 @@ export function PageSelector() {
   const canContinue =
     groups.length > 0 && groups.some((g) => g.pageIndices.length > 0);
 
-  if (!loadedPdf) return null;
+  // Hooks below `useMemo` must always run; bail out after they're declared.
+  const totalPages = loadedPdf?.totalPages ?? 0;
+  // src is pinned to the file path only — page changes are applied via
+  // location.hash mutation inside the guest (see useWebviewPdfPage), which
+  // avoids reloading the whole PDF on every page step.
+  const webviewSrc = useMemo(
+    () =>
+      loadedPdf
+        ? `${pathToFileUrl(loadedPdf.filePath)}#page=1&view=FitH`
+        : "",
+    [loadedPdf?.filePath],
+  );
 
-  const totalPages = loadedPdf.totalPages;
-  const webviewSrc = `${pathToFileUrl(loadedPdf.filePath)}#page=${webviewPage + 1}&view=FitH`;
+  useWebviewPdfPage(webviewElRef, webviewPage + 1);
+
+  if (!loadedPdf) return null;
 
   return (
     <div className="flex flex-col h-full bg-surf-2 select-none">
@@ -347,6 +361,7 @@ export function PageSelector() {
           </div>
           <div className="flex-1 relative overflow-hidden min-h-0">
             <webview
+              ref={webviewElRef}
               src={webviewSrc}
               style={{
                 position: "absolute",
