@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, nativeTheme, session } from "electron";
+import { app, shell, BrowserWindow, nativeTheme } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import { autoUpdater } from "electron-updater";
@@ -81,19 +81,6 @@ function setupAutoUpdater(): void {
   });
 }
 
-function setupCSP(): void {
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        "Content-Security-Policy": [
-          "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'",
-        ],
-      },
-    });
-  });
-}
-
 app.whenReady().then(() => {
   electronApp.setAppUserModelId("com.pdfdecomposer");
 
@@ -106,7 +93,6 @@ app.whenReady().then(() => {
 
   if (!is.dev) {
     setupAutoUpdater();
-    setupCSP();
   }
 
   app.on("activate", function () {

@@ -3,6 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Scoped to this document only. Setting CSP via webRequest on the default
+      session also applies it to <webview> file:// loads, which breaks the
+      built-in Chromium PDF viewer (it loads its viewer assets from a
+      chrome-extension origin and uses workers/blob URLs).
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' blob:"
+    />
     <title>PDF Decomposer</title>
     <!-- Prevent text selection cursor on drag -->
     <style>

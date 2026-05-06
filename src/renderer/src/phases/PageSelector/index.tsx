@@ -4,6 +4,7 @@ import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
+import { pathToFileUrl } from "../../lib/pathToFileUrl";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -269,7 +270,7 @@ export function PageSelector() {
   if (!loadedPdf) return null;
 
   const totalPages = loadedPdf.totalPages;
-  const webviewSrc = `file://${loadedPdf.filePath.replace(/\\/g, "/")}#page=${webviewPage + 1}&view=FitH`;
+  const webviewSrc = `${pathToFileUrl(loadedPdf.filePath)}#page=${webviewPage + 1}&view=FitH`;
 
   return (
     <div className="flex flex-col h-full bg-surf-2 select-none">

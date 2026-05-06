@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { pathToFileUrl } from "../../lib/pathToFileUrl";
 
 interface NativePdfPreviewModalProps {
   filePath: string;
@@ -18,7 +19,7 @@ export function NativePdfPreviewModal({
   const [loading, setLoading] = useState(true);
   const webviewRef = useRef<HTMLElement>(null);
 
-  const src = `file://${filePath.replace(/\\/g, "/")}#page=${currentPage}`;
+  const src = `${pathToFileUrl(filePath)}#page=${currentPage}`;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
