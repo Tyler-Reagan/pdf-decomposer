@@ -1,10 +1,18 @@
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { Zap, Layers, Scissors } from "lucide-react";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 
 export function DropZone() {
-  const { setLoadedPdf, setPhase, setError, setTourActive } = usePdfStore();
+  const { setLoadedPdf, setPhase, setError, setTourActive } = usePdfStore(
+    useShallow((s) => ({
+      setLoadedPdf: s.setLoadedPdf,
+      setPhase: s.setPhase,
+      setError: s.setError,
+      setTourActive: s.setTourActive,
+    })),
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

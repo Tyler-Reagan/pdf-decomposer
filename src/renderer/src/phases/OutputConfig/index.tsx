@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import type { PageGroup } from "../../types/pdf";
@@ -29,7 +30,22 @@ export function OutputConfig() {
     setProcessingProgress,
     setOutputFilePaths,
     setError,
-  } = usePdfStore();
+  } = usePdfStore(
+    useShallow((s) => ({
+      loadedPdf: s.loadedPdf,
+      groups: s.groups,
+      metaGroups: s.metaGroups,
+      outputFiles: s.outputFiles,
+      setOutputFiles: s.setOutputFiles,
+      updateOutputFile: s.updateOutputFile,
+      saveDirectory: s.saveDirectory,
+      setSaveDirectory: s.setSaveDirectory,
+      setPhase: s.setPhase,
+      setProcessingProgress: s.setProcessingProgress,
+      setOutputFilePaths: s.setOutputFilePaths,
+      setError: s.setError,
+    })),
+  );
 
   const [isProcessing, setIsProcessing] = useState(false);
 

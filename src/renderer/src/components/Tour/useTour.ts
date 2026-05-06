@@ -1,10 +1,18 @@
 import { useCallback } from "react";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { TOUR_STEPS } from "./tourSteps";
 
 export function useTour() {
   const { tourActive, setTourActive, tourStepIndex, setTourStepIndex } =
-    usePdfStore();
+    usePdfStore(
+      useShallow((s) => ({
+        tourActive: s.tourActive,
+        setTourActive: s.setTourActive,
+        tourStepIndex: s.tourStepIndex,
+        setTourStepIndex: s.setTourStepIndex,
+      })),
+    );
 
   const currentStep = TOUR_STEPS[tourStepIndex] ?? null;
   const isFirst = tourStepIndex === 0;

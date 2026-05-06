@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useShallow } from "zustand/shallow";
 import { useTour } from "./useTour";
 import { usePdfStore } from "../../store/usePdfStore";
 import type { TourPlacement } from "./tourSteps";
@@ -96,7 +97,14 @@ export function TourOverlay() {
     dismiss,
   } = useTour();
 
-  const { phase, setLoadedPdf, setPhase, setError } = usePdfStore();
+  const { phase, setLoadedPdf, setPhase, setError } = usePdfStore(
+    useShallow((s) => ({
+      phase: s.phase,
+      setLoadedPdf: s.setLoadedPdf,
+      setPhase: s.setPhase,
+      setError: s.setError,
+    })),
+  );
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);

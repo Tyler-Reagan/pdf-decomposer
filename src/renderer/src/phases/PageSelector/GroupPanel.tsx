@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HexColorPicker } from "react-colorful";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { indicesToRangeString, GROUP_COLORS } from "../../types/pdf";
 import type { MetaGroup, PageGroup } from "../../types/pdf";
@@ -19,7 +20,21 @@ export function GroupPanel() {
     removeMetaGroup,
     updateMetaGroup,
     setGroupMetaGroup,
-  } = usePdfStore();
+  } = usePdfStore(
+    useShallow((s) => ({
+      groups: s.groups,
+      metaGroups: s.metaGroups,
+      loadedPdf: s.loadedPdf,
+      addGroup: s.addGroup,
+      removeGroup: s.removeGroup,
+      updateGroup: s.updateGroup,
+      setSelectedPageIndices: s.setSelectedPageIndices,
+      addMetaGroup: s.addMetaGroup,
+      removeMetaGroup: s.removeMetaGroup,
+      updateMetaGroup: s.updateMetaGroup,
+      setGroupMetaGroup: s.setGroupMetaGroup,
+    })),
+  );
 
   const totalPages = loadedPdf?.totalPages ?? 0;
   const assignedPages = new Set(groups.flatMap((g) => g.pageIndices));

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 
 interface FloatingActionBarProps {
@@ -16,7 +17,18 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
     removeGroup,
     updateGroup,
     clearSelection,
-  } = usePdfStore();
+  } = usePdfStore(
+    useShallow((s) => ({
+      selectedPageIndices: s.selectedPageIndices,
+      groups: s.groups,
+      addGroup: s.addGroup,
+      assignPagesToGroup: s.assignPagesToGroup,
+      unassignPages: s.unassignPages,
+      removeGroup: s.removeGroup,
+      updateGroup: s.updateGroup,
+      clearSelection: s.clearSelection,
+    })),
+  );
 
   const [renamingGroupId, setRenamingGroupId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");

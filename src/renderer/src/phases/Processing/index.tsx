@@ -1,11 +1,18 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
 
 export function Processing() {
   const { processingProgress, processingCurrent, processingTotal } =
-    usePdfStore();
+    usePdfStore(
+      useShallow((s) => ({
+        processingProgress: s.processingProgress,
+        processingCurrent: s.processingCurrent,
+        processingTotal: s.processingTotal,
+      })),
+    );
 
   return (
     <div className="flex flex-col items-center justify-center h-full bg-surf-2 px-8">
@@ -40,7 +47,13 @@ export function Processing() {
 }
 
 export function Complete() {
-  const { outputFilePaths, reset, saveDirectory } = usePdfStore();
+  const { outputFilePaths, reset, saveDirectory } = usePdfStore(
+    useShallow((s) => ({
+      outputFilePaths: s.outputFilePaths,
+      reset: s.reset,
+      saveDirectory: s.saveDirectory,
+    })),
+  );
 
   const handleOpenFolder = async () => {
     if (saveDirectory) {
@@ -129,7 +142,15 @@ export function Complete() {
 }
 
 export function ErrorScreen() {
-  const { errorMessage, reset, setPhase, loadedPdf, groups } = usePdfStore();
+  const { errorMessage, reset, setPhase, loadedPdf, groups } = usePdfStore(
+    useShallow((s) => ({
+      errorMessage: s.errorMessage,
+      reset: s.reset,
+      setPhase: s.setPhase,
+      loadedPdf: s.loadedPdf,
+      groups: s.groups,
+    })),
+  );
 
   const retryPhase = !loadedPdf
     ? "drop"

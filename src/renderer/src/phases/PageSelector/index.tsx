@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
@@ -19,7 +20,16 @@ export function PageSelector() {
     clearSelection,
     groups,
     setPhase,
-  } = usePdfStore();
+  } = usePdfStore(
+    useShallow((s) => ({
+      loadedPdf: s.loadedPdf,
+      selectedPageIndices: s.selectedPageIndices,
+      setSelectedPageIndices: s.setSelectedPageIndices,
+      clearSelection: s.clearSelection,
+      groups: s.groups,
+      setPhase: s.setPhase,
+    })),
+  );
 
   const [webviewPage, setWebviewPage] = useState(0);
   const [nodeGridFlex, setNodeGridFlex] = useState(NODE_GRID_FLEX_DEFAULT);
