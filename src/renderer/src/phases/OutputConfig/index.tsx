@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
+import { usePdfViewer } from "../../lib/usePdfViewer";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import type { PageGroup } from "../../types/pdf";
 import { Button } from "../../components/Button";
@@ -67,8 +68,17 @@ export function OutputConfig() {
     CONFIG_PANEL_FLEX_DEFAULT,
   );
   const webviewPanelRef = useRef<HTMLDivElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const configPanelRef = useRef<HTMLDivElement>(null);
   const webviewNavTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  usePdfViewer({
+    containerRef: pdfContainerRef,
+    filePath: loadedPdf?.filePath ?? "",
+    page: webviewPage + 1,
+    view: "FitH",
+    enabled: !!loadedPdf,
+  });
 
   const navigateWebview = useCallback((pageIndex: number) => {
     if (webviewNavTimer.current) clearTimeout(webviewNavTimer.current);
@@ -265,7 +275,6 @@ export function OutputConfig() {
   }
 
   const standaloneGroups = activeGroups.filter((g) => !g.metaGroupId);
-  const webviewSrc = `file://${loadedPdf.filePath.replace(/\\/g, "/")}#page=${webviewPage + 1}&view=FitH`;
 
   return (
     <div className="flex flex-col h-full bg-surf-2">
@@ -309,17 +318,10 @@ export function OutputConfig() {
               <span className="text-ink-4"> / {loadedPdf.totalPages}</span>
             </span>
           </div>
-          <div className="flex-1 relative overflow-hidden min-h-0">
-            <webview
-              src={webviewSrc}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-              }}
-            />
-          </div>
+          <div
+            ref={pdfContainerRef}
+            className="flex-1 relative overflow-hidden min-h-0 bg-surf-1"
+          />
         </div>
 
         {/* ── Resize handle ────────────────────────────────────────────── */}

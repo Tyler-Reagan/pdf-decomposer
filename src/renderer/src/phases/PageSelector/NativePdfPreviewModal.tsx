@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { pathToFileUrl } from "../../lib/pathToFileUrl";
-import { useWebviewPdfPage } from "../../lib/useWebviewPdfPage";
+import { usePdfViewer } from "../../lib/usePdfViewer";
 
 interface NativePdfPreviewModalProps {
   filePath: string;
@@ -17,17 +16,15 @@ export function NativePdfPreviewModal({
   onClose,
 }: NativePdfPreviewModalProps) {
   const [currentPage, setCurrentPage] = useState(initialPage + 1);
-  const [loading, setLoading] = useState(true);
-  const webviewRef = useRef<HTMLElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
 
-  // Pin the src to the file path; page changes navigate via location.hash
-  // inside the guest, avoiding a full PDF reload on every step.
-  const src = useMemo(
-    () => `${pathToFileUrl(filePath)}#page=${initialPage + 1}`,
-    [filePath, initialPage],
-  );
-
-  useWebviewPdfPage(webviewRef, currentPage, "Fit");
+  usePdfViewer({
+    containerRef: pdfContainerRef,
+    filePath,
+    page: currentPage,
+    view: "Fit",
+    enabled: true,
+  });
 
   useEffect(() => {
     const handler = (e: KeyboardEvent): void => {
@@ -52,15 +49,6 @@ export function NativePdfPreviewModal({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose, totalPages]);
 
-  useEffect(() => {
-    const el = webviewRef.current;
-    if (!el) return;
-    const onFinish = (): void => setLoading(false);
-    el.addEventListener("did-finish-load", onFinish as EventListener);
-    return () =>
-      el.removeEventListener("did-finish-load", onFinish as EventListener);
-  }, []);
-
   const goTo = (page: number): void =>
     setCurrentPage(Math.max(1, Math.min(totalPages, page)));
 
@@ -78,12 +66,15 @@ export function NativePdfPreviewModal({
           onClick={onClose}
         />
 
+        {/* Card uses opacity-only entrance because the WebContentsView
+            below is composited at the React layout's pixel bounds — a
+            scale/translate animation would desync from the view. */}
         <motion.div
-          className="relative z-10 flex flex-col bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl mx-6 my-6 overflow-hidden"
+          className="relative z-10 flex flex-col bg-surf-2 border border-bdr-hi shadow-2xl mx-6 my-6 overflow-hidden"
           style={{ maxHeight: "calc(100vh - 48px)" }}
-          initial={{ scale: 0.96, y: 8 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.96, y: 8 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-bdr-hi flex-shrink-0">
@@ -162,31 +153,10 @@ export function NativePdfPreviewModal({
             </button>
           </div>
 
-          <div className="relative flex-1 min-h-0 bg-surf-1">
-            {loading && (
-              <div className="absolute inset-0 flex items-center justify-center z-10 bg-surf-2">
-                <div className="flex flex-col items-center gap-3">
-                  <motion.div
-                    className="w-8 h-8 border-2 border-bdr border-t-acc rounded-full"
-                    animate={{ rotate: 360 }}
-                    transition={{
-                      duration: 0.8,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
-                  />
-                  <span className="text-ink-3 text-sm">
-                    Loading page {currentPage}…
-                  </span>
-                </div>
-              </div>
-            )}
-            <webview
-              ref={webviewRef}
-              src={src}
-              style={{ width: "100%", height: "100%", display: "block" }}
-            />
-          </div>
+          <div
+            ref={pdfContainerRef}
+            className="relative flex-1 min-h-0 bg-surf-1"
+          />
         </motion.div>
       </motion.div>
     </AnimatePresence>

@@ -37,6 +37,15 @@ export interface DownloadProgress {
   total: number;
 }
 
+export type PdfViewMode = "FitH" | "Fit";
+
+export interface PdfViewerBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const api = {
   openPdfDialog: (): Promise<string | null> =>
     ipcRenderer.invoke("open-pdf-dialog"),
@@ -109,6 +118,42 @@ const api = {
   installUpdate: (): void => ipcRenderer.send("install-update"),
 
   getDemoPdfPath: (): Promise<string> => ipcRenderer.invoke("get-demo-pdf-path"),
+
+  pdfViewer: {
+    create: (params: {
+      viewId: string;
+      filePath: string;
+      page: number;
+      view: PdfViewMode;
+    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:create", params),
+
+    load: (params: {
+      viewId: string;
+      filePath: string;
+      page: number;
+      view: PdfViewMode;
+    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:load", params),
+
+    navigate: (params: {
+      viewId: string;
+      page: number;
+      view: PdfViewMode;
+    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:navigate", params),
+
+    setBounds: (params: {
+      viewId: string;
+      bounds: PdfViewerBounds;
+    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:set-bounds", params),
+
+    setVisible: (params: {
+      viewId: string;
+      visible: boolean;
+    }): Promise<void> =>
+      ipcRenderer.invoke("pdf-viewer:set-visible", params),
+
+    destroy: (params: { viewId: string }): Promise<void> =>
+      ipcRenderer.invoke("pdf-viewer:destroy", params),
+  },
 };
 
 if (process.contextIsolated) {

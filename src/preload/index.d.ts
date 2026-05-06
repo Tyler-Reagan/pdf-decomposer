@@ -36,6 +36,41 @@ export interface DownloadProgress {
   total: number;
 }
 
+export type PdfViewMode = "FitH" | "Fit";
+
+export interface PdfViewerBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PdfViewerAPI {
+  create(params: {
+    viewId: string;
+    filePath: string;
+    page: number;
+    view: PdfViewMode;
+  }): Promise<void>;
+  load(params: {
+    viewId: string;
+    filePath: string;
+    page: number;
+    view: PdfViewMode;
+  }): Promise<void>;
+  navigate(params: {
+    viewId: string;
+    page: number;
+    view: PdfViewMode;
+  }): Promise<void>;
+  setBounds(params: {
+    viewId: string;
+    bounds: PdfViewerBounds;
+  }): Promise<void>;
+  setVisible(params: { viewId: string; visible: boolean }): Promise<void>;
+  destroy(params: { viewId: string }): Promise<void>;
+}
+
 export interface ElectronAppAPI {
   openPdfDialog(): Promise<string | null>;
   getPdfInfo(
@@ -54,6 +89,7 @@ export interface ElectronAppAPI {
   downloadUpdate(): Promise<void>;
   installUpdate(): void;
   getDemoPdfPath(): Promise<string>;
+  pdfViewer: PdfViewerAPI;
 }
 
 declare global {

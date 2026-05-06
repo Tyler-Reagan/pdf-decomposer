@@ -1,12 +1,11 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
-import { pathToFileUrl } from "../../lib/pathToFileUrl";
-import { useWebviewPdfPage } from "../../lib/useWebviewPdfPage";
+import { usePdfViewer } from "../../lib/usePdfViewer";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -47,7 +46,7 @@ export function PageSelector() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const webviewPanelRef = useRef<HTMLDivElement>(null);
-  const webviewElRef = useRef<HTMLElement>(null);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const nodeGridPanelRef = useRef<HTMLDivElement>(null);
   const autoScrollRafRef = useRef<number | null>(null);
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -279,20 +278,16 @@ export function PageSelector() {
   const canContinue =
     groups.length > 0 && groups.some((g) => g.pageIndices.length > 0);
 
-  // Hooks below `useMemo` must always run; bail out after they're declared.
+  // Hooks must always run; bail out after they're declared.
   const totalPages = loadedPdf?.totalPages ?? 0;
-  // src is pinned to the file path only — page changes are applied via
-  // location.hash mutation inside the guest (see useWebviewPdfPage), which
-  // avoids reloading the whole PDF on every page step.
-  const webviewSrc = useMemo(
-    () =>
-      loadedPdf
-        ? `${pathToFileUrl(loadedPdf.filePath)}#page=1&view=FitH`
-        : "",
-    [loadedPdf?.filePath],
-  );
 
-  useWebviewPdfPage(webviewElRef, webviewPage + 1);
+  usePdfViewer({
+    containerRef: pdfContainerRef,
+    filePath: loadedPdf?.filePath ?? "",
+    page: webviewPage + 1,
+    view: "FitH",
+    enabled: !!loadedPdf,
+  });
 
   if (!loadedPdf) return null;
 
@@ -369,18 +364,12 @@ export function PageSelector() {
               <span className="text-ink-4"> / {totalPages}</span>
             </span>
           </div>
-          <div className="flex-1 relative overflow-hidden min-h-0">
-            <webview
-              ref={webviewElRef}
-              src={webviewSrc}
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-              }}
-            />
-          </div>
+          <div
+            ref={pdfContainerRef}
+            className="flex-1 relative overflow-hidden min-h-0 bg-surf-1"
+          />
+          {/* The actual PDF surface is a WebContentsView composited on top
+              of this container by the main process — see usePdfViewer. */}
         </div>
 
         {/* Resize handle */}
