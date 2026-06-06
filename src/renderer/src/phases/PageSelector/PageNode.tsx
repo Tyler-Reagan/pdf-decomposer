@@ -1,6 +1,14 @@
-import { memo } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { motion } from "framer-motion";
 import type { PageGroup } from "../../types/pdf";
+import { useInViewport } from "../../lib/useInViewport";
+import { usePdfRender } from "../../lib/PdfRenderProvider";
 
 interface PageNodeProps {
   pageIndex: number;
@@ -21,6 +29,53 @@ export const PageNode = memo(function PageNode({
   onMouseEnter,
   nodeRef,
 }: PageNodeProps) {
+  const store = usePdfRender();
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Merge the parent's geometry ref (used by the lasso) with our own, which
+  // the viewport observer needs.
+  const setRefs = useCallback(
+    (el: HTMLDivElement | null) => {
+      cardRef.current = el;
+      nodeRef(el);
+    },
+    [nodeRef],
+  );
+
+  // Prefetch slightly before the card scrolls in; flag visibility so the
+  // provider's LRU never evicts an on-screen thumbnail.
+  const inView = useInViewport(cardRef, { rootMargin: "200px" });
+
+  const bitmap = useSyncExternalStore(
+    useCallback(
+      (cb) => store.subscribeThumb(pageIndex, cb),
+      [store, pageIndex],
+    ),
+    useCallback(() => store.getThumb(pageIndex), [store, pageIndex]),
+  );
+  const hasError = useSyncExternalStore(
+    useCallback(
+      (cb) => store.subscribeThumb(pageIndex, cb),
+      [store, pageIndex],
+    ),
+    useCallback(() => store.getThumbError(pageIndex), [store, pageIndex]),
+  );
+
+  useEffect(() => {
+    store.setThumbVisible(pageIndex, inView);
+    if (inView) store.requestThumb(pageIndex);
+    return () => store.setThumbVisible(pageIndex, false);
+  }, [inView, pageIndex, store]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !bitmap) return;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+  }, [bitmap]);
+
   const borderColor = isSelected
     ? "var(--acc)"
     : isFocused
@@ -33,7 +88,7 @@ export const PageNode = memo(function PageNode({
 
   return (
     <div
-      ref={nodeRef}
+      ref={setRefs}
       data-page-index={pageIndex}
       onMouseDown={(e) => onMouseDown(e, pageIndex)}
       onMouseEnter={(e) => onMouseEnter(e, pageIndex)}
@@ -80,15 +135,31 @@ export const PageNode = memo(function PageNode({
           </div>
         )}
 
-        {/* Simulated page lines */}
-        <div className="flex-1 flex flex-col justify-center gap-1 px-2 pl-3 opacity-[0.11]">
-          <div className="h-px rounded bg-ink-2" />
-          <div className="h-px rounded bg-ink-2 w-4/5" />
-          <div className="h-px rounded bg-ink-2" />
-          <div className="h-px rounded bg-ink-2 w-3/4" />
-          <div className="h-px rounded bg-ink-2 w-5/6" />
-          <div className="h-px rounded bg-ink-2" />
-          <div className="h-px rounded bg-ink-2 w-2/3" />
+        {/* Rendered page content (lazy) */}
+        <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-surf-1">
+          {bitmap ? (
+            <canvas
+              ref={canvasRef}
+              className="max-w-full max-h-full"
+              style={{ width: "auto", height: "auto", display: "block" }}
+            />
+          ) : hasError ? (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--ink-4)"
+              strokeWidth="1.5"
+              className="opacity-50"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          ) : (
+            <div className="w-2/3 h-3/4 rounded-sm bg-ctrl/40 animate-pulse" />
+          )}
         </div>
 
         <div className="bg-surf-2/70 text-center py-0.5 flex-shrink-0">

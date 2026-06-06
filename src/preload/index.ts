@@ -1,50 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { electronAPI } from "@electron-toolkit/preload";
-
-export interface SplitGroup {
-  groupId: string;
-  outputPath: string;
-  pageIndices: number[];
-}
-
-export interface SplitPdfParams {
-  sourcePath: string;
-  groups: SplitGroup[];
-}
-
-export interface SplitPdfResult {
-  success: boolean;
-  outputPaths: string[];
-  error?: string;
-}
-
-export interface SplitProgressEvent {
-  current: number;
-  total: number;
-  groupId?: string;
-  outputPath?: string;
-  done?: boolean;
-}
-
-export interface UpdateInfo {
-  version: string;
-  releaseDate?: string;
-}
-
-export interface DownloadProgress {
-  percent: number;
-  transferred: number;
-  total: number;
-}
-
-export type PdfViewMode = "FitH" | "Fit";
-
-export interface PdfViewerBounds {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import type {
+  SplitPdfParams,
+  SplitPdfResult,
+  SplitProgressEvent,
+  UpdateInfo,
+  DownloadProgress,
+} from "../shared/types";
 
 const api = {
   openPdfDialog: (): Promise<string | null> =>
@@ -117,55 +79,15 @@ const api = {
 
   installUpdate: (): void => ipcRenderer.send("install-update"),
 
-  getDemoPdfPath: (): Promise<string> => ipcRenderer.invoke("get-demo-pdf-path"),
-
-  pdfViewer: {
-    create: (params: {
-      viewId: string;
-      filePath: string;
-      page: number;
-      view: PdfViewMode;
-    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:create", params),
-
-    load: (params: {
-      viewId: string;
-      filePath: string;
-      page: number;
-      view: PdfViewMode;
-    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:load", params),
-
-    navigate: (params: {
-      viewId: string;
-      page: number;
-      view: PdfViewMode;
-    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:navigate", params),
-
-    setBounds: (params: {
-      viewId: string;
-      bounds: PdfViewerBounds;
-    }): Promise<void> => ipcRenderer.invoke("pdf-viewer:set-bounds", params),
-
-    setVisible: (params: {
-      viewId: string;
-      visible: boolean;
-    }): Promise<void> =>
-      ipcRenderer.invoke("pdf-viewer:set-visible", params),
-
-    destroy: (params: { viewId: string }): Promise<void> =>
-      ipcRenderer.invoke("pdf-viewer:destroy", params),
-  },
+  getDemoPdfPath: (): Promise<string> =>
+    ipcRenderer.invoke("get-demo-pdf-path"),
 };
 
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld("electron", electronAPI);
-    contextBridge.exposeInMainWorld("electronAPI", api);
-  } catch (error) {
-    console.error(error);
-  }
-} else {
-  // @ts-ignore
-  window.electron = electronAPI;
-  // @ts-ignore
-  window.electronAPI = api;
+// contextIsolation is always enabled (see the main-process webPreferences), so
+// the bridge is the only exposure path — no non-isolated window.* fallback.
+try {
+  contextBridge.exposeInMainWorld("electron", electronAPI);
+  contextBridge.exposeInMainWorld("electronAPI", api);
+} catch (error) {
+  console.error(error);
 }

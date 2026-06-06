@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { UpdateInfo, DownloadProgress } from "../../../preload/index";
+import type { UpdateInfo, DownloadProgress } from "../../../shared/types";
 
 type BannerState = "available" | "downloading" | "downloaded" | "error";
 

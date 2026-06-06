@@ -13,10 +13,12 @@
     "dist:win": "node scripts/build-demo-pdf.cjs && electron-vite build && electron-builder --win",
     "format": "prettier --write .",
     "knip": "knip",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "postinstall": "electron-builder install-app-deps",
-    "typecheck": "tsc --noEmit"
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
@@ -34,6 +36,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "@tailwindcss/vite": "^4.0.6",
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
@@ -43,9 +46,13 @@
     "electron-builder": "^26.8.1",
     "electron-vite": "^5.0.0",
     "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
     "knip": "^5.86.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^4.0.6",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.60.1",
+    "vite": "^7.3.5"
   }
 }

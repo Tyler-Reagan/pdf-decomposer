@@ -1,6 +1,6 @@
 export type TourPlacement = "top" | "bottom" | "left" | "right";
 
-export interface TourStep {
+interface TourStep {
   target: string; // data-tour attribute value
   title: string;
   description: string;

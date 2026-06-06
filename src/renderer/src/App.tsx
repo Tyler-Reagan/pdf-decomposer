@@ -8,6 +8,7 @@ import { Processing, Complete, ErrorScreen } from "./phases/Processing";
 import { UpdateBanner } from "./components/UpdateBanner";
 import { TourOverlay } from "./components/Tour/TourOverlay";
 import { useTour } from "./components/Tour/useTour";
+import { PdfRenderProvider } from "./lib/PdfRenderProvider";
 
 function useTheme() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -19,7 +20,10 @@ function useTheme() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
-  return { theme, toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")) };
+  return {
+    theme,
+    toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")),
+  };
 }
 
 const ZOOM_STEPS = [0.75, 0.85, 1.0, 1.15, 1.3, 1.5];
@@ -32,12 +36,19 @@ function useZoom() {
   });
 
   useEffect(() => {
-    (document.documentElement.style as CSSStyleDeclaration & { zoom: string }).zoom = String(zoom);
+    (
+      document.documentElement.style as CSSStyleDeclaration & { zoom: string }
+    ).zoom = String(zoom);
     localStorage.setItem("zoom", String(zoom));
   }, [zoom]);
 
-  const zoomIn = () => setZoom((z) => ZOOM_STEPS[Math.min(ZOOM_STEPS.indexOf(z) + 1, ZOOM_STEPS.length - 1)]);
-  const zoomOut = () => setZoom((z) => ZOOM_STEPS[Math.max(ZOOM_STEPS.indexOf(z) - 1, 0)]);
+  const zoomIn = () =>
+    setZoom(
+      (z) =>
+        ZOOM_STEPS[Math.min(ZOOM_STEPS.indexOf(z) + 1, ZOOM_STEPS.length - 1)],
+    );
+  const zoomOut = () =>
+    setZoom((z) => ZOOM_STEPS[Math.max(ZOOM_STEPS.indexOf(z) - 1, 0)]);
   const zoomReset = () => setZoom(ZOOM_DEFAULT);
 
   return {
@@ -55,16 +66,24 @@ export function App() {
   const phase = usePdfStore((s) => s.phase);
   const groups = usePdfStore((s) => s.groups);
   const reset = usePdfStore((s) => s.reset);
+  const filePath = usePdfStore((s) => s.loadedPdf?.filePath ?? "");
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
-  const { zoom, zoomIn, zoomOut, zoomReset, canZoomIn, canZoomOut, isDefault } = useZoom();
+  const { zoom, zoomIn, zoomOut, zoomReset, canZoomIn, canZoomOut, isDefault } =
+    useZoom();
 
   const showTourButton = !tourActive && phase !== "drop";
   const showHomeButton = phase !== "drop" && phase !== "processing";
 
   const handleHome = useCallback(() => {
     const hasWork = groups.some((g) => g.pageIndices.length > 0);
-    if (hasWork && !window.confirm("Load a different file? Your current groups will be lost.")) return;
+    if (
+      hasWork &&
+      !window.confirm(
+        "Load a different file? Your current groups will be lost.",
+      )
+    )
+      return;
     reset();
   }, [groups, reset]);
 
@@ -90,7 +109,14 @@ export function App() {
                 style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
                 className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-4 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
@@ -111,13 +137,22 @@ export function App() {
             title="Zoom out"
             className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </button>
           <button
             onClick={isDefault ? undefined : zoomReset}
-            title={isDefault ? `Zoom: ${Math.round(zoom * 100)}%` : "Reset zoom"}
+            title={
+              isDefault ? `Zoom: ${Math.round(zoom * 100)}%` : "Reset zoom"
+            }
             className={`h-6 px-1.5 rounded text-[10px] font-mono tabular-nums transition-colors duration-150 ${isDefault ? "text-ink-4 cursor-default" : "text-ink-2 hover:bg-surf-1 cursor-pointer"}`}
           >
             {Math.round(zoom * 100)}%
@@ -128,7 +163,14 @@ export function App() {
             title="Zoom in"
             className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
@@ -137,89 +179,94 @@ export function App() {
 
         {/* Right: theme toggle + tour button */}
         <div className="flex items-center gap-1">
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-          className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
-          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-        >
-          {theme === "dark" ? <SunIcon /> : <MoonIcon />}
-          <span>{theme === "dark" ? "Light" : "Dark"}</span>
-        </button>
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+            className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            <span>{theme === "dark" ? "Light" : "Dark"}</span>
+          </button>
 
-        {/* Tour resume button */}
-        <AnimatePresence>
-          {showTourButton && (
-            <motion.button
-              key="tour-resume"
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.85 }}
-              transition={{ duration: 0.18 }}
-              onClick={resume}
-              title={`Resume tour (step ${stepIndex + 1}/${totalSteps})`}
-              style={{
-                WebkitAppRegion: "no-drag",
-                boxShadow: "0 0 0 2px color-mix(in oklch, var(--acc) 40%, transparent)",
-              } as React.CSSProperties}
-              className="h-7 flex items-center gap-1.5 px-2 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-[11px] font-medium"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
+          {/* Tour resume button */}
+          <AnimatePresence>
+            {showTourButton && (
+              <motion.button
+                key="tour-resume"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.85 }}
+                transition={{ duration: 0.18 }}
+                onClick={resume}
+                title={`Resume tour (step ${stepIndex + 1}/${totalSteps})`}
+                style={
+                  {
+                    WebkitAppRegion: "no-drag",
+                    boxShadow:
+                      "0 0 0 2px color-mix(in oklch, var(--acc) 40%, transparent)",
+                  } as React.CSSProperties
+                }
+                className="h-7 flex items-center gap-1.5 px-2 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-[11px] font-medium"
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 8v4" />
-                <path d="M12 16h.01" />
-              </svg>
-              <span>Tour</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 8v4" />
+                  <path d="M12 16h.01" />
+                </svg>
+                <span>Tour</span>
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       <UpdateBanner />
 
-      <div className="flex-1 relative overflow-hidden">
-        <AnimatePresence mode="wait">
-          {phase === "drop" && (
-            <PhaseWrapper key="drop">
-              <DropZone />
-            </PhaseWrapper>
-          )}
-          {phase === "selecting" && (
-            <PhaseWrapper key="selecting">
-              <PageSelector />
-            </PhaseWrapper>
-          )}
-          {phase === "configuring" && (
-            <PhaseWrapper key="configuring">
-              <OutputConfig />
-            </PhaseWrapper>
-          )}
-          {phase === "processing" && (
-            <PhaseWrapper key="processing">
-              <Processing />
-            </PhaseWrapper>
-          )}
-          {phase === "complete" && (
-            <PhaseWrapper key="complete">
-              <Complete />
-            </PhaseWrapper>
-          )}
-          {phase === "error" && (
-            <PhaseWrapper key="error">
-              <ErrorScreen />
-            </PhaseWrapper>
-          )}
-        </AnimatePresence>
-      </div>
+      <PdfRenderProvider filePath={filePath}>
+        <div className="flex-1 relative overflow-hidden">
+          <AnimatePresence mode="wait">
+            {phase === "drop" && (
+              <PhaseWrapper key="drop">
+                <DropZone />
+              </PhaseWrapper>
+            )}
+            {phase === "selecting" && (
+              <PhaseWrapper key="selecting">
+                <PageSelector />
+              </PhaseWrapper>
+            )}
+            {phase === "configuring" && (
+              <PhaseWrapper key="configuring">
+                <OutputConfig />
+              </PhaseWrapper>
+            )}
+            {phase === "processing" && (
+              <PhaseWrapper key="processing">
+                <Processing />
+              </PhaseWrapper>
+            )}
+            {phase === "complete" && (
+              <PhaseWrapper key="complete">
+                <Complete />
+              </PhaseWrapper>
+            )}
+            {phase === "error" && (
+              <PhaseWrapper key="error">
+                <ErrorScreen />
+              </PhaseWrapper>
+            )}
+          </AnimatePresence>
+        </div>
+      </PdfRenderProvider>
       <TourOverlay />
     </div>
   );
@@ -241,7 +288,14 @@ function PhaseWrapper({ children }: { children: React.ReactNode }) {
 
 function SunIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -257,7 +311,14 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );

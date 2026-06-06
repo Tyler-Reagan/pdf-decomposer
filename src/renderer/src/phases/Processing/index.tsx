@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { ProgressBar } from "../../components/ProgressBar";

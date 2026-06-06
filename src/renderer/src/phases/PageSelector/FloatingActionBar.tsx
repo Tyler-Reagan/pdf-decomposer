@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
@@ -34,7 +34,10 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
   const [renameValue, setRenameValue] = useState("");
   const renameInputRef = useRef<HTMLInputElement>(null);
 
-  const selected = [...selectedPageIndices];
+  const selected = useMemo(
+    () => [...selectedPageIndices],
+    [selectedPageIndices],
+  );
 
   const commonGroup =
     selected.length > 0

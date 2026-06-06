@@ -59,20 +59,32 @@ function setupAutoUpdater(): void {
   autoUpdater.autoInstallOnAppQuit = true;
 
   autoUpdater.on("update-available", (info) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send("update-available", info);
+    BrowserWindow.getAllWindows()[0]?.webContents.send(
+      "update-available",
+      info,
+    );
   });
 
   autoUpdater.on("download-progress", (progress) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send("update-progress", progress);
+    BrowserWindow.getAllWindows()[0]?.webContents.send(
+      "update-progress",
+      progress,
+    );
   });
 
   autoUpdater.on("update-downloaded", (info) => {
-    BrowserWindow.getAllWindows()[0]?.webContents.send("update-downloaded", info);
+    BrowserWindow.getAllWindows()[0]?.webContents.send(
+      "update-downloaded",
+      info,
+    );
   });
 
   autoUpdater.on("error", (err) => {
     console.error("Auto-updater error:", err.message);
-    BrowserWindow.getAllWindows()[0]?.webContents.send("update-error", err.message);
+    BrowserWindow.getAllWindows()[0]?.webContents.send(
+      "update-error",
+      err.message,
+    );
   });
 
   autoUpdater.checkForUpdates().catch((err) => {
@@ -81,7 +93,7 @@ function setupAutoUpdater(): void {
 }
 
 app.whenReady().then(() => {
-  electronApp.setAppUserModelId("com.pdfdecomposer");
+  electronApp.setAppUserModelId("com.pdfdecomposer.app");
 
   app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);

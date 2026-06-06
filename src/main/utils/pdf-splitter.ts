@@ -2,23 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import * as fs from "fs";
 import * as path from "path";
 import { BrowserWindow } from "electron";
-
-export interface SplitGroup {
-  groupId: string;
-  outputPath: string;
-  pageIndices: number[]; // 0-based
-}
-
-export interface SplitPdfParams {
-  sourcePath: string;
-  groups: SplitGroup[];
-}
-
-export interface SplitPdfResult {
-  success: boolean;
-  outputPaths: string[];
-  error?: string;
-}
+import type { SplitPdfParams, SplitPdfResult } from "../../shared/types";
 
 function assertSafePdfPath(filePath: string, label: string): void {
   if (filePath.includes("\0")) throw new Error(`Invalid ${label}`);

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
-import { usePdfViewer } from "../../lib/usePdfViewer";
+import { PdfPreview } from "../../components/PdfPreview";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import type { PageGroup } from "../../types/pdf";
 import { Button } from "../../components/Button";
@@ -68,17 +68,8 @@ export function OutputConfig() {
     CONFIG_PANEL_FLEX_DEFAULT,
   );
   const webviewPanelRef = useRef<HTMLDivElement>(null);
-  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const configPanelRef = useRef<HTMLDivElement>(null);
   const webviewNavTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  usePdfViewer({
-    containerRef: pdfContainerRef,
-    filePath: loadedPdf?.filePath ?? "",
-    page: webviewPage + 1,
-    view: "FitH",
-    enabled: !!loadedPdf,
-  });
 
   const navigateWebview = useCallback((pageIndex: number) => {
     if (webviewNavTimer.current) clearTimeout(webviewNavTimer.current);
@@ -266,8 +257,7 @@ export function OutputConfig() {
   };
 
   const canStart =
-    activeGroups.length > 0 &&
-    activeGroups.every((g) => !!getEffectiveDir(g));
+    activeGroups.length > 0 && activeGroups.every((g) => !!getEffectiveDir(g));
 
   if (!loadedPdf) {
     setPhase("drop");
@@ -318,10 +308,9 @@ export function OutputConfig() {
               <span className="text-ink-4"> / {loadedPdf.totalPages}</span>
             </span>
           </div>
-          <div
-            ref={pdfContainerRef}
-            className="flex-1 relative overflow-hidden min-h-0 bg-surf-1"
-          />
+          <div className="flex-1 relative overflow-hidden min-h-0 bg-surf-1">
+            <PdfPreview pageIndex={webviewPage} />
+          </div>
         </div>
 
         {/* ── Resize handle ────────────────────────────────────────────── */}
@@ -563,9 +552,7 @@ export function OutputConfig() {
                           updateOutputFile(group.id, { outputFileName: val })
                         }
                         onChooseDir={() => handleChooseDir(group.id)}
-                        onToggleDirOverride={() =>
-                          toggleDirOverride(group.id)
-                        }
+                        onToggleDirOverride={() => toggleDirOverride(group.id)}
                         onNavigate={() =>
                           group.pageIndices.length > 0 &&
                           navigateWebview(group.pageIndices[0])

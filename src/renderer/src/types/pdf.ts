@@ -65,31 +65,6 @@ export function indicesToRangeString(indices: number[]): string {
   return ranges.join(", ");
 }
 
-/** Parse range string to 0-based indices. Returns null on parse error. */
-export function rangeStringToIndices(
-  input: string,
-  totalPages: number,
-): number[] | null {
-  if (!input.trim()) return [];
-  const parts = input.split(",").map((s) => s.trim());
-  const indices: number[] = [];
-
-  for (const part of parts) {
-    const dashMatch = part.match(/^(\d+)\s*[–\-]\s*(\d+)$/);
-    if (dashMatch) {
-      const from = parseInt(dashMatch[1]) - 1;
-      const to = parseInt(dashMatch[2]) - 1;
-      if (from < 0 || to >= totalPages || from > to) return null;
-      for (let i = from; i <= to; i++) indices.push(i);
-    } else {
-      const single = parseInt(part);
-      if (isNaN(single) || single < 1 || single > totalPages) return null;
-      indices.push(single - 1);
-    }
-  }
-  return [...new Set(indices)].sort((a, b) => a - b);
-}
-
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

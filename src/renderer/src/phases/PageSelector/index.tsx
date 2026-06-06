@@ -5,7 +5,7 @@ import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
-import { usePdfViewer } from "../../lib/usePdfViewer";
+import { PdfPreview } from "../../components/PdfPreview";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -46,7 +46,6 @@ export function PageSelector() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const webviewPanelRef = useRef<HTMLDivElement>(null);
-  const pdfContainerRef = useRef<HTMLDivElement>(null);
   const nodeGridPanelRef = useRef<HTMLDivElement>(null);
   const autoScrollRafRef = useRef<number | null>(null);
   const mousePositionRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -281,14 +280,6 @@ export function PageSelector() {
   // Hooks must always run; bail out after they're declared.
   const totalPages = loadedPdf?.totalPages ?? 0;
 
-  usePdfViewer({
-    containerRef: pdfContainerRef,
-    filePath: loadedPdf?.filePath ?? "",
-    page: webviewPage + 1,
-    view: "FitH",
-    enabled: !!loadedPdf,
-  });
-
   if (!loadedPdf) return null;
 
   return (
@@ -364,12 +355,9 @@ export function PageSelector() {
               <span className="text-ink-4"> / {totalPages}</span>
             </span>
           </div>
-          <div
-            ref={pdfContainerRef}
-            className="flex-1 relative overflow-hidden min-h-0 bg-surf-1"
-          />
-          {/* The actual PDF surface is a WebContentsView composited on top
-              of this container by the main process — see usePdfViewer. */}
+          <div className="flex-1 relative overflow-hidden min-h-0 bg-surf-1">
+            <PdfPreview pageIndex={webviewPage} />
+          </div>
         </div>
 
         {/* Resize handle */}
@@ -433,7 +421,10 @@ export function PageSelector() {
         </div>
 
         {/* Group panel */}
-        <div data-tour="group-panel" className="w-72 flex-shrink-0 border-l border-bdr-hi bg-surf-2/80">
+        <div
+          data-tour="group-panel"
+          className="w-72 flex-shrink-0 border-l border-bdr-hi bg-surf-2/80"
+        >
           <GroupPanel />
         </div>
       </div>

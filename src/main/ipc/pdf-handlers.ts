@@ -2,7 +2,8 @@ import { ipcMain, dialog, app } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { PDFDocument } from "pdf-lib";
-import { splitPdf, SplitPdfParams } from "../utils/pdf-splitter";
+import { splitPdf } from "../utils/pdf-splitter";
+import type { SplitPdfParams } from "../../shared/types";
 
 // Reject null bytes which can be used to truncate paths on some systems.
 function assertSafePath(filePath: string): void {
