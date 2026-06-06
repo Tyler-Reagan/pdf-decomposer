@@ -10,6 +10,7 @@ import { PdfPreview } from "../../components/PdfPreview";
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
 const NODE_GRID_FLEX_MAX = 1.4;
+const GRID_COLS = 4;
 
 export function PageSelector() {
   const {
@@ -45,6 +46,8 @@ export function PageSelector() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  // Mirrors webviewPage for synchronous arrow-key cursor math (see below).
+  const cursorRef = useRef(0);
   const webviewPanelRef = useRef<HTMLDivElement>(null);
   const nodeGridPanelRef = useRef<HTMLDivElement>(null);
   const autoScrollRafRef = useRef<number | null>(null);
@@ -280,6 +283,62 @@ export function PageSelector() {
   // Hooks must always run; bail out after they're declared.
   const totalPages = loadedPdf?.totalPages ?? 0;
 
+  // Keep the synchronous cursor in step with mouse/lasso-driven page changes.
+  useEffect(() => {
+    cursorRef.current = webviewPage;
+  }, [webviewPage]);
+
+  // Arrow-key navigation across the page grid. Plain arrows move the cursor
+  // and select that single page (driving the preview); Shift+arrow extends
+  // the selection from the last anchor, mirroring shift-click. The cursor is
+  // mirrored into a ref and advanced synchronously so held/repeating keys
+  // chain correctly instead of stalling on the React render cycle.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent): void => {
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
+
+      const cur = cursorRef.current;
+      let next = cur;
+      switch (e.key) {
+        case "ArrowRight":
+          next = Math.min(cur + 1, totalPages - 1);
+          break;
+        case "ArrowLeft":
+          next = Math.max(cur - 1, 0);
+          break;
+        case "ArrowDown":
+          next = Math.min(cur + GRID_COLS, totalPages - 1);
+          break;
+        case "ArrowUp":
+          next = Math.max(cur - GRID_COLS, 0);
+          break;
+        default:
+          return;
+      }
+      e.preventDefault();
+      cursorRef.current = next;
+
+      if (e.shiftKey && lastClickIndexRef.current !== null) {
+        const from = Math.min(lastClickIndexRef.current, next);
+        const to = Math.max(lastClickIndexRef.current, next);
+        const range = new Set<number>();
+        for (let i = from; i <= to; i++) range.add(i);
+        setSelectedPageIndices(range);
+      } else {
+        setSelectedPageIndices(new Set([next]));
+        lastClickIndexRef.current = next;
+      }
+      setWebviewPage(next);
+      nodeRefs.current.get(next)?.scrollIntoView({ block: "nearest" });
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [totalPages, setSelectedPageIndices]);
+
   if (!loadedPdf) return null;
 
   return (
@@ -386,7 +445,7 @@ export function PageSelector() {
           >
             <div
               className={`grid gap-2 p-3 ${selectedPageIndices.size > 0 ? "pb-52" : ""}`}
-              style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
+              style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)` }}
             >
               {Array.from({ length: totalPages }, (_, i) => (
                 <PageNode
