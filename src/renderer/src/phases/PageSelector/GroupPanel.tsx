@@ -62,7 +62,7 @@ export function GroupPanel() {
 
       {/* Groups list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-0">
-        {/* Meta group sections */}
+        {/* Group sections */}
         <AnimatePresence initial={false}>
           {metaGroups.map((metaGroup) => {
             const mgGroups = groups.filter(
@@ -170,7 +170,7 @@ export function GroupPanel() {
           onClick={() => addMetaGroup()}
         >
           <FolderPlus size={14} strokeWidth={2} />
-          Add Meta Group
+          Add Group
         </Button>
       </div>
     </div>
@@ -206,17 +206,41 @@ function MetaGroupSection({
   onSelectGroup,
   onAssignToMetaGroup,
 }: MetaGroupSectionProps) {
-  const [showAddDropdown, setShowAddDropdown] = useState(false);
-  const addDropdownRef = useRef<HTMLDivElement>(null);
-  useClickOutside(
-    addDropdownRef,
-    () => setShowAddDropdown(false),
-    showAddDropdown,
-  );
+  const [showChecklist, setShowChecklist] = useState(false);
+  const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
+  const checklistRef = useRef<HTMLDivElement>(null);
+  useClickOutside(checklistRef, () => setShowChecklist(false), showChecklist);
 
   const rename = useInlineRename(metaGroup.name, (name) =>
     onUpdateMetaGroup({ name }),
   );
+
+  // Output files that can belong to this group: its current members (shown
+  // pre-ticked) plus any ungrouped files. Files in *other* groups are excluded.
+  const candidates = [...groups, ...ungroupedGroups];
+
+  const openChecklist = (): void => {
+    setPendingIds(new Set(groups.map((g) => g.id)));
+    setShowChecklist(true);
+  };
+
+  const togglePending = (id: string): void =>
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const applyChecklist = (): void => {
+    for (const m of groups) {
+      if (!pendingIds.has(m.id)) onAssignToMetaGroup(m.id, null); // removed
+    }
+    for (const c of ungroupedGroups) {
+      if (pendingIds.has(c.id)) onAssignToMetaGroup(c.id, metaGroup.id); // added
+    }
+    setShowChecklist(false);
+  };
 
   return (
     <div
@@ -251,53 +275,73 @@ function MetaGroupSection({
           </button>
         )}
 
-        {/* Add ungrouped groups to this meta group */}
-        <div className="relative flex-shrink-0" ref={addDropdownRef}>
+        {/* Add / remove output files in this group (multi-select) */}
+        <div className="relative flex-shrink-0" ref={checklistRef}>
           <button
-            onClick={() => setShowAddDropdown((v) => !v)}
-            disabled={ungroupedGroups.length === 0}
+            onClick={() =>
+              showChecklist ? setShowChecklist(false) : openChecklist()
+            }
+            disabled={candidates.length === 0}
             className="text-ink-4 hover:text-ink-2 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title={
-              ungroupedGroups.length === 0
-                ? "No ungrouped files to add"
-                : "Add files to this meta group"
+              candidates.length === 0
+                ? "No output files to add"
+                : "Add or remove output files"
             }
           >
             <Plus size={14} strokeWidth={2} />
           </button>
-          {showAddDropdown && ungroupedGroups.length > 0 && (
-            <div className="absolute right-0 top-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-40 py-1">
-              <div className="px-2 py-1 text-ink-4 text-[10px] uppercase tracking-wide">
-                Add to this meta group
+          {showChecklist && candidates.length > 0 && (
+            <div className="absolute right-0 top-6 z-50 w-56 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl py-1">
+              <div className="px-3 py-1.5 text-ink-4 text-[10px] uppercase tracking-wide">
+                Output files in this group
               </div>
-              {ungroupedGroups.map((g) => (
+              <div className="max-h-60 overflow-y-auto py-0.5">
+                {candidates.map((g) => (
+                  <label
+                    key={g.id}
+                    className="w-full px-3 py-1.5 text-xs text-ink-2 hover:bg-surf-1 flex items-center gap-2 transition-colors cursor-pointer select-none"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={pendingIds.has(g.id)}
+                      onChange={() => togglePending(g.id)}
+                      className="w-3.5 h-3.5 rounded accent-[var(--acc)] cursor-pointer flex-shrink-0"
+                    />
+                    <span
+                      className="w-2 h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: g.color }}
+                    />
+                    <span className="truncate flex-1">{g.name}</span>
+                    <span className="text-ink-4 flex-shrink-0">
+                      {g.pageIndices.length}p
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <div className="px-2 pt-1.5 mt-0.5 border-t border-bdr flex items-center justify-end gap-2">
                 <button
-                  key={g.id}
-                  onClick={() => {
-                    onAssignToMetaGroup(g.id, metaGroup.id);
-                    setShowAddDropdown(false);
-                  }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-ink-2 hover:bg-surf-1 flex items-center gap-2 transition-colors"
+                  onClick={() => setShowChecklist(false)}
+                  className="px-2 py-1 text-[11px] text-ink-4 hover:text-ink-2 transition-colors"
                 >
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: g.color }}
-                  />
-                  <span className="truncate">{g.name}</span>
-                  <span className="text-ink-4 ml-auto flex-shrink-0">
-                    {g.pageIndices.length}p
-                  </span>
+                  Cancel
                 </button>
-              ))}
+                <button
+                  onClick={applyChecklist}
+                  className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-acc/15 hover:bg-acc/25 border border-acc/25 hover:border-acc/45 text-acc transition-colors"
+                >
+                  Apply
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Delete meta group */}
+        {/* Delete group */}
         <button
           onClick={onRemoveMetaGroup}
           className="text-ink-4 hover:text-red-400 transition-colors flex-shrink-0"
-          title="Remove meta group"
+          title="Remove group"
         >
           <X size={13} strokeWidth={2} />
         </button>
@@ -394,21 +438,21 @@ function GroupCard({
           </button>
         )}
 
-        {/* Meta group assignment button */}
+        {/* Group assignment button */}
         {insideMetaGroup ? (
-          /* Remove from meta group */
+          /* Remove from group */
           <button
             onClick={(e) => {
               e.stopPropagation();
               onAssignToMetaGroup(null);
             }}
             className="text-ink-4 hover:text-ink-2 transition-colors flex-shrink-0"
-            title="Remove from meta group"
+            title="Remove from group"
           >
             <FolderMinus size={13} strokeWidth={2} />
           </button>
         ) : allMetaGroups.length > 0 ? (
-          /* Move to meta group dropdown */
+          /* Move to group dropdown */
           <div className="relative flex-shrink-0" ref={metaPickerRef}>
             <button
               onClick={(e) => {
@@ -416,14 +460,14 @@ function GroupCard({
                 setShowMetaGroupPicker((v) => !v);
               }}
               className="text-ink-4 hover:text-ink-2 transition-colors"
-              title="Move to meta group"
+              title="Move to group"
             >
               <FolderInput size={13} strokeWidth={2} />
             </button>
             {showMetaGroupPicker && (
               <div className="absolute right-0 bottom-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-36 py-1">
                 <div className="px-2 py-1 text-ink-4 text-[10px] uppercase tracking-wide">
-                  Move to meta group
+                  Move to group
                 </div>
                 {allMetaGroups.map((mg) => (
                   <button

@@ -193,7 +193,7 @@ export const usePdfStore = create<PdfStore>()(
       const color = GROUP_COLORS[(existingCount + 4) % GROUP_COLORS.length];
       const metaGroup: MetaGroup = {
         id: nextMetaGroupId(),
-        name: name ?? `Meta Group ${existingCount + 1}`,
+        name: name ?? `Group ${existingCount + 1}`,
         color,
       };
       set((s) => {

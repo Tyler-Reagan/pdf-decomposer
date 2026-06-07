@@ -169,7 +169,9 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
             /* ── Rename mode ── */
             <div className="bg-surf-2/90 backdrop-blur-md border border-acc/40 rounded-xl shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between px-3 py-2 border-b border-bdr">
-                <span className="text-ink-3 text-xs">Name this group</span>
+                <span className="text-ink-3 text-xs">
+                  Name this output file
+                </span>
                 <button
                   onClick={cancelRename}
                   className="text-ink-4 hover:text-ink-2 transition-colors"
@@ -189,7 +191,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                     if (e.key === "Enter") confirmRename();
                     if (e.key === "Escape") cancelRename();
                   }}
-                  placeholder="Group name…"
+                  placeholder="Output file name…"
                   className="w-full bg-ctrl text-ink-1 text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-1 focus:ring-acc placeholder:text-ink-4"
                 />
               </div>
@@ -251,16 +253,16 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
               >
                 <button
                   onClick={handleCreateGroup}
-                  title="Create new group (↵)"
+                  title="Create new output file (↵)"
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-acc/15 hover:bg-acc/25 border border-acc/25 hover:border-acc/45 transition-colors text-[11px] font-medium text-acc flex-1"
                 >
                   <Plus size={10} strokeWidth={2.5} />
-                  New Group
+                  New Output File
                 </button>
                 {hasAssignedPages && (
                   <button
                     onClick={handleRemoveFromGroups}
-                    title="Remove from group (⌫)"
+                    title="Remove from output file (⌫)"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-ctrl transition-colors text-[11px] font-medium text-ink-3 hover:text-ink-2 flex-shrink-0"
                   >
                     <Trash2 size={10} strokeWidth={2} />

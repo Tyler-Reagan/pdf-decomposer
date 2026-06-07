@@ -455,7 +455,7 @@ export function OutputConfig() {
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-ink-2 text-sm font-medium">
                       {metaGroups.length > 0
-                        ? `Standalone Files (${standaloneGroups.length})`
+                        ? `Ungrouped Files (${standaloneGroups.length})`
                         : `Output Files (${standaloneGroups.length})`}
                     </h2>
                     {standaloneGroups.length > 1 && (

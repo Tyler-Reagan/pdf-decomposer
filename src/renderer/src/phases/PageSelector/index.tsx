@@ -394,7 +394,7 @@ export function PageSelector() {
           style={{ flex: nodeGridFlex, minWidth: 0 }}
         >
           <div className="px-3 py-2 text-ink-4 text-xs border-b border-bdr flex-shrink-0">
-            Click · Shift · Ctrl · Drag to lasso
+            Click · Shift · Ctrl · Drag to select
           </div>
 
           <div
