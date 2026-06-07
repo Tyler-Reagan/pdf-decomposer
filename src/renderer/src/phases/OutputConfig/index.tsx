@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PdfPreview } from "../../components/PdfPreview";
+import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import type { PageGroup } from "../../types/pdf";
 import { Button } from "../../components/Button";
@@ -83,37 +84,15 @@ export function OutputConfig() {
     [],
   );
 
-  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const wvEl = webviewPanelRef.current;
-    const cfEl = configPanelRef.current;
-    if (!wvEl || !cfEl) return;
-
-    wvEl.style.pointerEvents = "none";
-
-    const startX = e.clientX;
-    const startWebviewW = wvEl.getBoundingClientRect().width;
-    const startConfigW = cfEl.getBoundingClientRect().width;
-
-    const onMove = (ev: MouseEvent): void => {
-      const delta = ev.clientX - startX;
-      const newWebviewW = Math.max(180, startWebviewW + delta);
-      const newConfigW = Math.max(200, startConfigW - delta);
-      setConfigPanelFlex(
-        Math.max(
-          CONFIG_PANEL_FLEX_MIN,
-          Math.min(CONFIG_PANEL_FLEX_MAX, newConfigW / newWebviewW),
-        ),
-      );
-    };
-    const onUp = (): void => {
-      wvEl.style.pointerEvents = "";
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, []);
+  const handleDividerMouseDown = useSplitPaneResize({
+    leftRef: webviewPanelRef,
+    rightRef: configPanelRef,
+    minLeft: 180,
+    minRight: 200,
+    flexMin: CONFIG_PANEL_FLEX_MIN,
+    flexMax: CONFIG_PANEL_FLEX_MAX,
+    setFlex: setConfigPanelFlex,
+  });
 
   const activeGroups = groups.filter((g) => g.pageIndices.length > 0);
   const activeOutputFiles = outputFiles.filter((f) =>

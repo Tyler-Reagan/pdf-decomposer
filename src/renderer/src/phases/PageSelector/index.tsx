@@ -6,6 +6,7 @@ import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
 import { PdfPreview } from "../../components/PdfPreview";
+import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -72,37 +73,15 @@ export function PageSelector() {
     return stableNodeRefCallbacks.current.get(pageIndex)!;
   }, []);
 
-  const handleDividerMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    const wvEl = webviewPanelRef.current;
-    const ngEl = nodeGridPanelRef.current;
-    if (!wvEl || !ngEl) return;
-
-    wvEl.style.pointerEvents = "none";
-
-    const startX = e.clientX;
-    const startWebviewW = wvEl.getBoundingClientRect().width;
-    const startNodeW = ngEl.getBoundingClientRect().width;
-
-    const onMove = (ev: MouseEvent): void => {
-      const delta = ev.clientX - startX;
-      const newWebviewW = Math.max(180, startWebviewW + delta);
-      const newNodeW = Math.max(160, startNodeW - delta);
-      setNodeGridFlex(
-        Math.max(
-          NODE_GRID_FLEX_MIN,
-          Math.min(NODE_GRID_FLEX_MAX, newNodeW / newWebviewW),
-        ),
-      );
-    };
-    const onUp = (): void => {
-      wvEl.style.pointerEvents = "";
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-  }, []);
+  const handleDividerMouseDown = useSplitPaneResize({
+    leftRef: webviewPanelRef,
+    rightRef: nodeGridPanelRef,
+    minLeft: 180,
+    minRight: 160,
+    flexMin: NODE_GRID_FLEX_MIN,
+    flexMax: NODE_GRID_FLEX_MAX,
+    setFlex: setNodeGridFlex,
+  });
 
   const webviewNavTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigateWebview = useCallback((pageIndex: number) => {

@@ -1,11 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HexColorPicker } from "react-colorful";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
-import { indicesToRangeString, GROUP_COLORS } from "../../types/pdf";
+import { indicesToRangeString } from "../../types/pdf";
 import type { MetaGroup, PageGroup } from "../../types/pdf";
 import { Button } from "../../components/Button";
+import { ColorPicker } from "../../components/ColorPicker";
+import { useInlineRename } from "../../lib/useInlineRename";
+import { useClickOutside } from "../../lib/useClickOutside";
 
 export function GroupPanel() {
   const {
@@ -228,51 +230,17 @@ function MetaGroupSection({
   onSelectGroup,
   onAssignToMetaGroup,
 }: MetaGroupSectionProps) {
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameValue, setNameValue] = useState(metaGroup.name);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const addDropdownRef = useRef<HTMLDivElement>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
+  useClickOutside(
+    addDropdownRef,
+    () => setShowAddDropdown(false),
+    showAddDropdown,
+  );
 
-  useEffect(() => {
-    setNameValue(metaGroup.name);
-  }, [metaGroup.name]);
-
-  useEffect(() => {
-    if (!showAddDropdown) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        addDropdownRef.current &&
-        !addDropdownRef.current.contains(e.target as Node)
-      ) {
-        setShowAddDropdown(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showAddDropdown]);
-
-  useEffect(() => {
-    if (!showColorPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(e.target as Node)
-      ) {
-        setShowColorPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showColorPicker]);
-
-  const commitName = () => {
-    const trimmed = nameValue.trim();
-    if (trimmed) onUpdateMetaGroup({ name: trimmed });
-    else setNameValue(metaGroup.name);
-    setIsEditingName(false);
-  };
+  const rename = useInlineRename(metaGroup.name, (name) =>
+    onUpdateMetaGroup({ name }),
+  );
 
   return (
     <div
@@ -285,66 +253,22 @@ function MetaGroupSection({
         style={{ backgroundColor: `${metaGroup.color}18` }}
       >
         {/* Color swatch */}
-        <div className="relative flex-shrink-0">
-          <button
-            className="w-5 h-5 rounded-full border-2 border-bdr focus:outline-none cursor-pointer hover:scale-110 transition-transform duration-150"
-            style={{ backgroundColor: metaGroup.color }}
-            onClick={() => setShowColorPicker((v) => !v)}
-            title="Change color"
-          />
-          <AnimatePresence>
-            {showColorPicker && (
-              <motion.div
-                ref={pickerRef}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.12 }}
-                className="absolute left-7 top-0 z-50 bg-surf-2 border border-bdr-hi rounded-xl p-3 shadow-2xl"
-                style={{ width: 200 }}
-              >
-                <HexColorPicker
-                  color={metaGroup.color}
-                  onChange={(c) => onUpdateMetaGroup({ color: c })}
-                />
-                <div className="grid grid-cols-8 gap-1 mt-2">
-                  {GROUP_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      className="w-5 h-5 rounded-full border border-bdr hover:scale-110 transition-transform"
-                      style={{ backgroundColor: c }}
-                      onClick={() => {
-                        onUpdateMetaGroup({ color: c });
-                        setShowColorPicker(false);
-                      }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <ColorPicker
+          color={metaGroup.color}
+          onChange={(c) => onUpdateMetaGroup({ color: c })}
+          swatchClassName="w-5 h-5 rounded-full border-2 border-bdr focus:outline-none cursor-pointer hover:scale-110 transition-transform duration-150"
+        />
 
         {/* Editable name */}
-        {isEditingName ? (
+        {rename.isEditing ? (
           <input
-            autoFocus
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            onBlur={commitName}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitName();
-              if (e.key === "Escape") {
-                setNameValue(metaGroup.name);
-                setIsEditingName(false);
-              }
-            }}
+            {...rename.inputProps}
             className="flex-1 bg-ctrl text-ink-1 text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-acc min-w-0"
           />
         ) : (
           <button
             className="flex-1 text-left text-ink-1 text-sm font-semibold truncate hover:text-ink-1 transition-colors min-w-0"
-            onDoubleClick={() => setIsEditingName(true)}
+            onDoubleClick={rename.start}
             title="Double-click to rename"
           >
             {metaGroup.name}
@@ -474,53 +398,15 @@ function GroupCard({
   onSelectGroup,
   onAssignToMetaGroup,
 }: GroupCardProps) {
-  const [showColorPicker, setShowColorPicker] = useState(false);
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameValue, setNameValue] = useState(group.name);
   const [showMetaGroupPicker, setShowMetaGroupPicker] = useState(false);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-  const pickerRef = useRef<HTMLDivElement>(null);
   const metaPickerRef = useRef<HTMLDivElement>(null);
+  useClickOutside(
+    metaPickerRef,
+    () => setShowMetaGroupPicker(false),
+    showMetaGroupPicker,
+  );
 
-  useEffect(() => {
-    setNameValue(group.name);
-  }, [group.name]);
-
-  useEffect(() => {
-    if (isEditingName) nameInputRef.current?.select();
-  }, [isEditingName]);
-
-  useEffect(() => {
-    if (!showColorPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowColorPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showColorPicker]);
-
-  useEffect(() => {
-    if (!showMetaGroupPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        metaPickerRef.current &&
-        !metaPickerRef.current.contains(e.target as Node)
-      ) {
-        setShowMetaGroupPicker(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [showMetaGroupPicker]);
-
-  const commitName = () => {
-    const trimmed = nameValue.trim();
-    if (trimmed) onUpdateName(trimmed);
-    else setNameValue(group.name);
-    setIsEditingName(false);
-  };
+  const rename = useInlineRename(group.name, onUpdateName);
 
   return (
     <div
@@ -533,68 +419,19 @@ function GroupCard({
     >
       <div className="flex items-center gap-2">
         {/* Color swatch */}
-        <div className="relative flex-shrink-0">
-          <button
-            className="w-6 h-6 rounded-full border-2 border-bdr flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-acc cursor-pointer hover:scale-110 transition-transform duration-150"
-            style={{ backgroundColor: group.color }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowColorPicker((v) => !v);
-            }}
-            title="Change color"
-          />
-          <AnimatePresence>
-            {showColorPicker && (
-              <motion.div
-                ref={pickerRef}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.12 }}
-                className="absolute left-8 top-0 z-50 bg-surf-2 border border-bdr-hi rounded-xl p-3 shadow-2xl"
-                style={{ width: 200 }}
-              >
-                <HexColorPicker color={group.color} onChange={onUpdateColor} />
-                {/* Preset swatches */}
-                <div className="grid grid-cols-8 gap-1 mt-2">
-                  {GROUP_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      className="w-5 h-5 rounded-full border border-bdr hover:scale-110 transition-transform"
-                      style={{ backgroundColor: c }}
-                      onClick={() => {
-                        onUpdateColor(c);
-                        setShowColorPicker(false);
-                      }}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <ColorPicker color={group.color} onChange={onUpdateColor} />
 
         {/* Name */}
-        {isEditingName ? (
+        {rename.isEditing ? (
           <input
-            ref={nameInputRef}
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
+            {...rename.inputProps}
             onClick={(e) => e.stopPropagation()}
-            onBlur={commitName}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") commitName();
-              if (e.key === "Escape") {
-                setNameValue(group.name);
-                setIsEditingName(false);
-              }
-            }}
             className="flex-1 bg-ctrl text-ink-1 text-sm rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-acc min-w-0"
           />
         ) : (
           <button
             className="flex-1 text-left text-ink-1 text-sm font-medium hover:text-acc transition-colors truncate min-w-0"
-            onDoubleClick={() => setIsEditingName(true)}
+            onDoubleClick={rename.start}
             title="Double-click to rename"
           >
             {group.name}
