@@ -1,5 +1,5 @@
 import { ipcMain, dialog, app } from "electron";
-import * as fs from "fs";
+import { promises as fs } from "fs";
 import * as path from "path";
 import { PDFDocument } from "pdf-lib";
 import { splitPdf } from "../utils/pdf-splitter";
@@ -31,7 +31,7 @@ export function registerPdfHandlers(): void {
   ipcMain.handle("get-pdf-info", async (_event, filePath: string) => {
     assertSafePath(filePath);
     try {
-      const bytes = fs.readFileSync(filePath);
+      const bytes = await fs.readFile(filePath);
       const pdf = await PDFDocument.load(bytes, { ignoreEncryption: true });
       return {
         pageCount: pdf.getPageCount(),
@@ -48,7 +48,7 @@ export function registerPdfHandlers(): void {
   ipcMain.handle("read-pdf-file", async (_event, filePath: string) => {
     assertSafePath(filePath);
     try {
-      const bytes = fs.readFileSync(filePath);
+      const bytes = await fs.readFile(filePath);
       return bytes;
     } catch (err) {
       throw new Error(
@@ -64,13 +64,13 @@ export function registerPdfHandlers(): void {
     "store-pdf-data",
     async (_event, data: Buffer, originalName: string) => {
       const dir = path.join(app.getPath("temp"), "pdf-decomposer");
-      fs.mkdirSync(dir, { recursive: true });
+      await fs.mkdir(dir, { recursive: true });
       // Strip directory components and disallowed characters from the filename.
       const safeName = path
         .basename(originalName)
         .replace(/[/\\<>:"|?*\0]/g, "_");
       const dest = path.join(dir, safeName);
-      fs.writeFileSync(dest, data);
+      await fs.writeFile(dest, data);
       return dest;
     },
   );
@@ -83,12 +83,9 @@ export function registerPdfHandlers(): void {
   // Open path in Explorer/Finder — restricted to directories only.
   ipcMain.handle("open-path", async (_event, pathToOpen: string) => {
     assertSafePath(pathToOpen);
-    let stat: fs.Stats;
-    try {
-      stat = fs.statSync(pathToOpen);
-    } catch {
+    const stat = await fs.stat(pathToOpen).catch(() => {
       throw new Error("Path does not exist");
-    }
+    });
     if (!stat.isDirectory()) {
       throw new Error("Path is not a directory");
     }

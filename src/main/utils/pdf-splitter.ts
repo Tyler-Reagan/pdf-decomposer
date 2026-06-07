@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import * as fs from "fs";
+import { promises as fs } from "fs";
 import * as path from "path";
 import { BrowserWindow } from "electron";
 import type { SplitPdfParams, SplitPdfResult } from "../../shared/types";
@@ -20,7 +20,7 @@ export async function splitPdf(
     assertSafePdfPath(sourcePath, "source path");
     for (const g of groups) assertSafePdfPath(g.outputPath, "output path");
 
-    const sourceBytes = fs.readFileSync(sourcePath);
+    const sourceBytes = await fs.readFile(sourcePath);
     const sourcePdf = await PDFDocument.load(sourceBytes);
     const totalGroups = groups.length;
     const outputPaths: string[] = [];
@@ -44,7 +44,7 @@ export async function splitPdf(
       pages.forEach((p: import("pdf-lib").PDFPage) => outPdf.addPage(p));
 
       const outBytes = await outPdf.save();
-      fs.writeFileSync(group.outputPath, outBytes);
+      await fs.writeFile(group.outputPath, outBytes);
       outputPaths.push(group.outputPath);
     }
 
