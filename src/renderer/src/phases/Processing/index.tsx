@@ -3,6 +3,7 @@ import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { ProgressBar } from "../../components/ProgressBar";
 import { Button } from "../../components/Button";
+import { File, Folder, X } from "lucide-react";
 
 export function Processing() {
   const { processingProgress, processingCurrent, processingTotal } =
@@ -88,28 +89,25 @@ export function Complete() {
           className="text-left space-y-2 mb-8"
           initial="hidden"
           animate="visible"
-          variants={{ visible: { transition: { staggerChildren: 0.05, delayChildren: 0.2 } } }}
+          variants={{
+            visible: {
+              transition: { staggerChildren: 0.05, delayChildren: 0.2 },
+            },
+          }}
         >
           {outputFilePaths.map((fp) => {
             const name = fp.replace(/\\/g, "/").split("/").pop() ?? fp;
             return (
               <motion.div
                 key={fp}
-                variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                variants={{
+                  hidden: { opacity: 0, x: -8 },
+                  visible: { opacity: 1, x: 0 },
+                }}
                 transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
                 className="flex items-center gap-3 bg-surf-1/60 border border-bdr rounded-lg px-4 py-3"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
+                <File size={16} strokeWidth={2} color="#10b981" />
                 <span className="text-ink-1 text-sm font-mono flex-1 truncate">
                   {name}
                 </span>
@@ -123,16 +121,7 @@ export function Complete() {
             Split Another PDF
           </Button>
           <Button variant="primary" onClick={handleOpenFolder}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            </svg>
+            <Folder size={16} strokeWidth={2} />
             Open Folder
           </Button>
         </div>
@@ -173,17 +162,7 @@ export function ErrorScreen() {
         className="w-full max-w-md text-center"
       >
         <div className="w-20 h-20 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center mx-auto mb-6">
-          <svg
-            width="36"
-            height="36"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <X size={36} strokeWidth={2} color="#ef4444" />
         </div>
         <h2 className="text-ink-1 text-2xl font-semibold mb-3">
           Something went wrong

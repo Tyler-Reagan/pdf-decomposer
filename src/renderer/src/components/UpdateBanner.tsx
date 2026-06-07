@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
 import type { UpdateInfo, DownloadProgress } from "../../../shared/types";
 
 type BannerState = "available" | "downloading" | "downloaded" | "error";
@@ -81,7 +82,9 @@ export function UpdateBanner() {
           transition={{ duration: 0.2 }}
           className="flex-shrink-0 overflow-hidden"
         >
-          <div className={`flex items-center gap-3 px-4 py-2 border-b text-sm ${state === "error" ? "bg-red-950/80 border-red-500/20" : "bg-acc/8 border-acc/20"}`}>
+          <div
+            className={`flex items-center gap-3 px-4 py-2 border-b text-sm ${state === "error" ? "bg-red-950/80 border-red-500/20" : "bg-acc/8 border-acc/20"}`}
+          >
             <span
               className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                 state === "downloaded"
@@ -166,14 +169,7 @@ export function UpdateBanner() {
                   className="text-ink-4 hover:text-ink-2 transition-colors leading-none cursor-pointer p-0.5"
                   aria-label="Dismiss"
                 >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="currentColor"
-                  >
-                    <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                  </svg>
+                  <X size={12} strokeWidth={1.5} />
                 </button>
               )}
             </div>

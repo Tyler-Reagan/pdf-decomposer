@@ -144,8 +144,14 @@ export function TourOverlay() {
     if (!tourActive) return;
 
     const APP_STATE_KEYS = new Set([
-      "Enter", "Backspace", "Delete", "F2",
-      "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+      "Enter",
+      "Backspace",
+      "Delete",
+      "F2",
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowUp",
+      "ArrowDown",
     ]);
 
     const handler = (e: KeyboardEvent) => {
@@ -176,7 +182,8 @@ export function TourOverlay() {
     };
 
     window.addEventListener("keydown", handler, { capture: true });
-    return () => window.removeEventListener("keydown", handler, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", handler, { capture: true });
   }, [tourActive, next, prev, dismiss, nextBlocked]);
 
   const handleLoadDemo = useCallback(async () => {
@@ -258,159 +265,158 @@ export function TourOverlay() {
               transform: `translateY(${pos.translateY})`,
             }}
           >
-          <motion.div
-            key={`tooltip-${stepIndex}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.18, ease: [0, 0, 0.2, 1] }}
-          >
-            <div className="bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-3 pb-1">
-                <div className="flex gap-1 items-center">
-                  {Array.from({ length: totalSteps }, (_, i) => (
-                    <div
-                      key={i}
-                      className={`h-1 rounded-full transition-all duration-200 ${
-                        i === stepIndex
-                          ? "w-4 bg-acc"
-                          : "w-1.5 bg-ctrl"
-                      }`}
-                    />
-                  ))}
-                  <span className="text-ink-4 text-[10px] ml-2 tabular-nums">
-                    {stepIndex + 1}/{totalSteps}
-                  </span>
-                </div>
-                <button
-                  onClick={dismiss}
-                  className="text-ink-4 hover:text-ink-2 transition-colors cursor-pointer -mr-1"
-                  aria-label="Close tour"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
+            <motion.div
+              key={`tooltip-${stepIndex}`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.18, ease: [0, 0, 0.2, 1] }}
+            >
+              <div className="bg-surf-2 border border-bdr-hi rounded-2xl shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 pt-3 pb-1">
+                  <div className="flex gap-1 items-center">
+                    {Array.from({ length: totalSteps }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`h-1 rounded-full transition-all duration-200 ${
+                          i === stepIndex ? "w-4 bg-acc" : "w-1.5 bg-ctrl"
+                        }`}
+                      />
+                    ))}
+                    <span className="text-ink-4 text-[10px] ml-2 tabular-nums">
+                      {stepIndex + 1}/{totalSteps}
+                    </span>
+                  </div>
+                  <button
+                    onClick={dismiss}
+                    className="text-ink-4 hover:text-ink-2 transition-colors cursor-pointer -mr-1"
+                    aria-label="Close tour"
                   >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Content */}
-              <div className="px-4 pt-1 pb-3">
-                <h3 className="text-ink-1 font-semibold text-sm mb-1.5">
-                  {currentStep.title}
-                </h3>
-                <p className="text-ink-3 text-xs leading-relaxed">
-                  {currentStep.description}
-                </p>
-
-                {currentStep.hint && !nextBlocked && (
-                  <div className="mt-3 flex gap-2 items-start bg-acc/10 border border-acc/20 rounded-lg px-3 py-2">
                     <svg
-                      className="flex-shrink-0 mt-0.5 text-acc"
-                      width="11"
-                      height="11"
+                      width="14"
+                      height="14"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth="2.5"
+                      strokeWidth="2"
                     >
-                      <polyline points="9 18 15 12 9 6" />
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
-                    <p className="text-acc text-[11px] leading-snug">
-                      {currentStep.hint}
-                    </p>
-                  </div>
-                )}
+                  </button>
+                </div>
 
-                {showDemoOption && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="mt-3 pt-3 border-t border-bdr"
-                  >
-                    <p className="text-ink-3 text-xs mb-2">
-                      Don't have a PDF handy?
-                    </p>
-                    <button
-                      onClick={handleLoadDemo}
-                      disabled={loadingDemo}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-surf-1 hover:bg-ctrl border border-bdr-hi text-ink-2 hover:text-ink-1 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                {/* Content */}
+                <div className="px-4 pt-1 pb-3">
+                  <h3 className="text-ink-1 font-semibold text-sm mb-1.5">
+                    {currentStep.title}
+                  </h3>
+                  <p className="text-ink-3 text-xs leading-relaxed">
+                    {currentStep.description}
+                  </p>
+
+                  {currentStep.hint && !nextBlocked && (
+                    <div className="mt-3 flex gap-2 items-start bg-acc/10 border border-acc/20 rounded-lg px-3 py-2">
+                      <svg
+                        className="flex-shrink-0 mt-0.5 text-acc"
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                      <p className="text-acc text-[11px] leading-snug">
+                        {currentStep.hint}
+                      </p>
+                    </div>
+                  )}
+
+                  {showDemoOption && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="mt-3 pt-3 border-t border-bdr"
                     >
-                      {loadingDemo ? (
-                        <>
-                          <motion.span
-                            className="inline-block w-3 h-3 border-2 border-bdr-hi border-t-acc rounded-full"
-                            animate={{ rotate: 360 }}
-                            transition={{
-                              duration: 0.7,
-                              repeat: Infinity,
-                              ease: "linear",
-                            }}
-                          />
-                          Loading…
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <polyline points="14 2 14 8 20 8" />
-                          </svg>
-                          Load demo PDF
-                        </>
-                      )}
-                    </button>
-                  </motion.div>
-                )}
+                      <p className="text-ink-3 text-xs mb-2">
+                        Don't have a PDF handy?
+                      </p>
+                      <button
+                        onClick={handleLoadDemo}
+                        disabled={loadingDemo}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-surf-1 hover:bg-ctrl border border-bdr-hi text-ink-2 hover:text-ink-1 text-xs font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loadingDemo ? (
+                          <>
+                            <motion.span
+                              className="inline-block w-3 h-3 border-2 border-bdr-hi border-t-acc rounded-full"
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 0.7,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                            />
+                            Loading…
+                          </>
+                        ) : (
+                          <>
+                            <svg
+                              width="13"
+                              height="13"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                              <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                            Load demo PDF
+                          </>
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
 
-                {nextBlocked && (
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-3 text-[11px] leading-snug" style={{ color: "var(--warn)" }}
+                  {nextBlocked && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="mt-3 text-[11px] leading-snug"
+                      style={{ color: "var(--warn)" }}
+                    >
+                      {stepIndex === 0
+                        ? "Load a PDF to continue the tour."
+                        : stepIndex === 4
+                          ? "Click 'Configure Output' above to continue."
+                          : "Navigate to that step in the app to continue."}
+                    </motion.p>
+                  )}
+                </div>
+
+                {/* Nav footer */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-bdr">
+                  <button
+                    onClick={prev}
+                    disabled={isFirst}
+                    className="text-ink-3 hover:text-ink-1 text-xs transition-colors disabled:opacity-0 cursor-pointer"
                   >
-                    {stepIndex === 0
-                      ? "Load a PDF to continue the tour."
-                      : stepIndex === 4
-                        ? "Click 'Configure Output' above to continue."
-                        : "Navigate to that step in the app to continue."}
-                  </motion.p>
-                )}
+                    ← Back
+                  </button>
+                  <button
+                    onClick={nextBlocked ? undefined : next}
+                    disabled={nextBlocked}
+                    className="px-3 py-1.5 rounded-lg bg-acc hover:bg-acc-hi disabled:bg-ctrl disabled:text-ink-3 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors cursor-pointer"
+                  >
+                    {isLast ? "Done" : "Next →"}
+                  </button>
+                </div>
               </div>
-
-              {/* Nav footer */}
-              <div className="flex items-center justify-between px-4 py-3 border-t border-bdr">
-                <button
-                  onClick={prev}
-                  disabled={isFirst}
-                  className="text-ink-3 hover:text-ink-1 text-xs transition-colors disabled:opacity-0 cursor-pointer"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={nextBlocked ? undefined : next}
-                  disabled={nextBlocked}
-                  className="px-3 py-1.5 rounded-lg bg-acc hover:bg-acc-hi disabled:bg-ctrl disabled:text-ink-3 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors cursor-pointer"
-                >
-                  {isLast ? "Done" : "Next →"}
-                </button>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
           </div>
         </>
       )}

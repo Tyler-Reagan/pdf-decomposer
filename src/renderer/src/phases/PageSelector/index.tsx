@@ -7,6 +7,7 @@ import { FloatingActionBar } from "./FloatingActionBar";
 import { Button } from "../../components/Button";
 import { PdfPreview } from "../../components/PdfPreview";
 import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -332,16 +333,7 @@ export function PageSelector() {
           className="text-ink-3 hover:text-ink-2 transition-colors cursor-pointer"
           title="Back"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+          <ChevronLeft size={20} strokeWidth={2} />
         </button>
 
         <div className="flex-1 min-w-0">
@@ -364,16 +356,7 @@ export function PageSelector() {
             data-tour="configure-output-btn"
           >
             Configure Output
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <ChevronRight size={16} strokeWidth={2} />
           </Button>
         </div>
       </div>

@@ -14,12 +14,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer select-none";
 
     const variants = {
-      primary:
-        "bg-acc hover:bg-acc-hi active:bg-acc-dk text-white shadow-sm",
+      primary: "bg-acc hover:bg-acc-hi active:bg-acc-dk text-white shadow-sm",
       secondary:
         "bg-ctrl hover:bg-ctrl-hi active:bg-surf-1 text-ink-1 border border-bdr-hi",
-      ghost:
-        "hover:bg-ctrl/60 active:bg-ctrl text-ink-2 hover:text-ink-1",
+      ghost: "hover:bg-ctrl/60 active:bg-ctrl text-ink-2 hover:text-ink-1",
       danger:
         "bg-red-600 hover:bg-red-500 active:bg-red-700 text-white shadow-sm",
     };

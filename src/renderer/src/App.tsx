@@ -9,6 +9,7 @@ import { UpdateBanner } from "./components/UpdateBanner";
 import { TourOverlay } from "./components/Tour/TourOverlay";
 import { useTour } from "./components/Tour/useTour";
 import { PdfRenderProvider } from "./lib/PdfRenderProvider";
+import { Home, Minus, Plus, AlertCircle, Sun, Moon } from "lucide-react";
 
 function useTheme() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -109,17 +110,7 @@ export function App() {
                 style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
                 className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-4 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
               >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
+                <Home size={12} strokeWidth={2} />
                 <span>Home</span>
               </motion.button>
             )}
@@ -137,16 +128,7 @@ export function App() {
             title="Zoom out"
             className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Minus size={10} strokeWidth={2.5} />
           </button>
           <button
             onClick={isDefault ? undefined : zoomReset}
@@ -163,17 +145,7 @@ export function App() {
             title="Zoom in"
             className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Plus size={10} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -186,7 +158,11 @@ export function App() {
             className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           >
-            {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+            {theme === "dark" ? (
+              <Sun size={14} strokeWidth={2} />
+            ) : (
+              <Moon size={14} strokeWidth={2} />
+            )}
             <span>{theme === "dark" ? "Light" : "Dark"}</span>
           </button>
 
@@ -210,18 +186,7 @@ export function App() {
                 }
                 className="h-7 flex items-center gap-1.5 px-2 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-[11px] font-medium"
               >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 8v4" />
-                  <path d="M12 16h.01" />
-                </svg>
+                <AlertCircle size={12} strokeWidth={2.5} />
                 <span>Tour</span>
               </motion.button>
             )}
@@ -283,43 +248,5 @@ function PhaseWrapper({ children }: { children: React.ReactNode }) {
     >
       {children}
     </motion.div>
-  );
-}
-
-function SunIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" />
-      <line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" />
-      <line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-    >
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
+import { X, Plus, Trash2 } from "lucide-react";
 
 interface FloatingActionBarProps {
   visible: boolean;
@@ -174,17 +175,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                   className="text-ink-4 hover:text-ink-2 transition-colors"
                   title="Cancel (Esc)"
                 >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+                  <X size={13} strokeWidth={2} />
                 </button>
               </div>
 
@@ -228,17 +219,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                   className="text-ink-4 hover:text-ink-2 transition-colors"
                   title="Dismiss (Esc)"
                 >
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
+                  <X size={13} strokeWidth={2} />
                 </button>
               </div>
 
@@ -273,17 +254,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                   title="Create new group (↵)"
                   className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-acc/15 hover:bg-acc/25 border border-acc/25 hover:border-acc/45 transition-colors text-[11px] font-medium text-acc flex-1"
                 >
-                  <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
+                  <Plus size={10} strokeWidth={2.5} />
                   New Group
                 </button>
                 {hasAssignedPages && (
@@ -292,19 +263,7 @@ export function FloatingActionBar({ visible }: FloatingActionBarProps) {
                     title="Remove from group (⌫)"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg hover:bg-ctrl transition-colors text-[11px] font-medium text-ink-3 hover:text-ink-2 flex-shrink-0"
                   >
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6l-1 14H6L5 6" />
-                      <path d="M10 11v6M14 11v6" />
-                      <path d="M9 6V4h6v2" />
-                    </svg>
+                    <Trash2 size={10} strokeWidth={2} />
                     Remove
                   </button>
                 )}

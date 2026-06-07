@@ -4,6 +4,7 @@ import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PdfPreview } from "../../components/PdfPreview";
 import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
+import { ChevronLeft, ChevronRight, File, AlertTriangle } from "lucide-react";
 import { indicesToRangeString, formatBytes } from "../../types/pdf";
 import type { PageGroup } from "../../types/pdf";
 import { Button } from "../../components/Button";
@@ -253,16 +254,7 @@ export function OutputConfig() {
           onClick={() => setPhase("selecting")}
           className="text-ink-3 hover:text-ink-2 transition-colors cursor-pointer mr-4"
         >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+          <ChevronLeft size={20} strokeWidth={2} />
         </button>
         <div className="flex-1">
           <h1 className="text-ink-1 font-semibold text-lg">Configure Output</h1>
@@ -317,17 +309,7 @@ export function OutputConfig() {
               <div className="bg-surf-1/50 border border-bdr/50 rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-acc/15 flex items-center justify-center flex-shrink-0">
-                    <svg
-                      width="20"
-                      height="20"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="var(--acc)"
-                      strokeWidth="2"
-                    >
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                    </svg>
+                    <File size={20} strokeWidth={2} color="var(--acc)" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-ink-1 font-medium truncate">
@@ -551,19 +533,12 @@ export function OutputConfig() {
                 if (skipped === 0) return null;
                 return (
                   <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="var(--warn-icon)"
-                      strokeWidth="2"
+                    <AlertTriangle
+                      size={18}
+                      strokeWidth={2}
+                      color="var(--warn-icon)"
                       className="flex-shrink-0 mt-0.5"
-                    >
-                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                      <line x1="12" y1="9" x2="12" y2="13" />
-                      <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
+                    />
                     <div className="text-sm text-warn">
                       <strong>
                         {skipped} unassigned page{skipped !== 1 ? "s" : ""}
@@ -591,16 +566,7 @@ export function OutputConfig() {
               onClick={handleStart}
             >
               {isProcessing ? "Starting…" : "Split PDF"}
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <ChevronRight size={18} strokeWidth={2} />
             </Button>
           </div>
         </div>

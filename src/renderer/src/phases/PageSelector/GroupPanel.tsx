@@ -8,6 +8,14 @@ import { Button } from "../../components/Button";
 import { ColorPicker } from "../../components/ColorPicker";
 import { useInlineRename } from "../../lib/useInlineRename";
 import { useClickOutside } from "../../lib/useClickOutside";
+import {
+  AlertTriangle,
+  Plus,
+  FolderPlus,
+  FolderMinus,
+  FolderInput,
+  X,
+} from "lucide-react";
 
 export function GroupPanel() {
   const {
@@ -137,18 +145,7 @@ export function GroupPanel() {
       {/* Warnings */}
       {unassignedCount > 0 && groups.length > 0 && (
         <div className="mx-3 mb-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--warn-icon)"
-            strokeWidth="2"
-          >
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
+          <AlertTriangle size={16} strokeWidth={2} color="var(--warn-icon)" />
           <span className="text-warn text-xs">
             {unassignedCount} page{unassignedCount !== 1 ? "s" : ""} unassigned
           </span>
@@ -163,17 +160,7 @@ export function GroupPanel() {
           className="w-full"
           onClick={() => addGroup()}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Plus size={14} strokeWidth={2} />
           Add Output File
         </Button>
         <Button
@@ -182,18 +169,7 @@ export function GroupPanel() {
           className="w-full"
           onClick={() => addMetaGroup()}
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-            <line x1="12" y1="11" x2="12" y2="17" />
-            <line x1="9" y1="14" x2="15" y2="14" />
-          </svg>
+          <FolderPlus size={14} strokeWidth={2} />
           Add Meta Group
         </Button>
       </div>
@@ -287,17 +263,7 @@ function MetaGroupSection({
                 : "Add files to this meta group"
             }
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
+            <Plus size={14} strokeWidth={2} />
           </button>
           {showAddDropdown && ungroupedGroups.length > 0 && (
             <div className="absolute right-0 top-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-40 py-1">
@@ -333,17 +299,7 @@ function MetaGroupSection({
           className="text-ink-4 hover:text-red-400 transition-colors flex-shrink-0"
           title="Remove meta group"
         >
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <X size={13} strokeWidth={2} />
         </button>
       </div>
 
@@ -449,17 +405,7 @@ function GroupCard({
             className="text-ink-4 hover:text-ink-2 transition-colors flex-shrink-0"
             title="Remove from meta group"
           >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-              <line x1="9" y1="14" x2="15" y2="14" />
-            </svg>
+            <FolderMinus size={13} strokeWidth={2} />
           </button>
         ) : allMetaGroups.length > 0 ? (
           /* Move to meta group dropdown */
@@ -472,18 +418,7 @@ function GroupCard({
               className="text-ink-4 hover:text-ink-2 transition-colors"
               title="Move to meta group"
             >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                <line x1="12" y1="11" x2="12" y2="17" />
-                <line x1="9" y1="14" x2="15" y2="14" />
-              </svg>
+              <FolderInput size={13} strokeWidth={2} />
             </button>
             {showMetaGroupPicker && (
               <div className="absolute right-0 bottom-6 z-50 bg-surf-2 border border-bdr-hi rounded-lg shadow-xl min-w-36 py-1">
@@ -521,17 +456,7 @@ function GroupCard({
           className="text-ink-4 hover:text-red-400 transition-colors flex-shrink-0"
           title="Remove group"
         >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <X size={14} strokeWidth={2} />
         </button>
       </div>
 

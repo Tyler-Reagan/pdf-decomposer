@@ -6,6 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { motion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
 import type { PageGroup } from "../../types/pdf";
 import { useInViewport } from "../../lib/useInViewport";
 import { usePdfRender } from "../../lib/PdfRenderProvider";
@@ -144,19 +145,12 @@ export const PageNode = memo(function PageNode({
               style={{ width: "auto", height: "auto", display: "block" }}
             />
           ) : hasError ? (
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--ink-4)"
-              strokeWidth="1.5"
+            <AlertCircle
+              size={20}
+              strokeWidth={1.5}
+              color="var(--ink-4)"
               className="opacity-50"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
+            />
           ) : (
             <div className="w-2/3 h-3/4 rounded-sm bg-ctrl/40 animate-pulse" />
           )}
