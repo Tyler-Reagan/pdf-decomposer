@@ -55,13 +55,48 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           npm version "$VERSION" --no-git-tag-version
 
-      - name: Build (Windows)
-        if: matrix.platform == 'win'
+      # Decide whether to sign, based purely on secret presence (only the
+      # boolean result is interpolated — the secrets themselves never appear in
+      # logs). macOS needs the full Developer ID + notarization set; Windows
+      # needs the code-signing cert. When absent, the build falls back to the
+      # existing unsigned path with no behavior change.
+      - name: Detect signing secrets
+        id: sign
+        shell: bash
+        run: |
+          echo "mac=${{ secrets.CSC_LINK != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}" >> "$GITHUB_OUTPUT"
+          echo "win=${{ secrets.WIN_CSC_LINK != '' }}" >> "$GITHUB_OUTPUT"
+
+      # macOS signed + notarized. Signing flags are passed as -c overrides (not
+      # baked into electron-builder.yml) so the unsigned fallback below stays
+      # exactly the current build — important because hardenedRuntime on an
+      # unsigned app would break launch.
+      - name: Build (macOS, signed + notarized)
+        if: matrix.platform == 'mac' && steps.sign.outputs.mac == 'true'
+        env:
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: npm run dist -- --mac --publish never -c.mac.hardenedRuntime=true -c.mac.gatekeeperAssess=false -c.mac.notarize=true
+
+      - name: Build (macOS, unsigned)
+        if: matrix.platform == 'mac' && steps.sign.outputs.mac != 'true'
+        run: npm run dist -- --mac --publish never
+
+      # Windows signed. electron-builder reads WIN_CSC_LINK / WIN_CSC_KEY_PASSWORD
+      # automatically (a base64 .pfx/.p12 and its password).
+      - name: Build (Windows, signed)
+        if: matrix.platform == 'win' && steps.sign.outputs.win == 'true'
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         run: npm run dist -- --win --publish never
 
-      - name: Build (macOS)
-        if: matrix.platform == 'mac'
-        run: npm run dist -- --mac --publish never
+      - name: Build (Windows, unsigned)
+        if: matrix.platform == 'win' && steps.sign.outputs.win != 'true'
+        run: npm run dist -- --win --publish never
 
       - name: Build (Linux)
         if: matrix.platform == 'linux'
