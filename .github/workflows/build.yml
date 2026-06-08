@@ -22,10 +22,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
@@ -67,46 +67,42 @@ jobs:
         if: matrix.platform == 'linux'
         run: npm run dist -- --linux --publish never
 
-      - name: Generate latest.yml (Windows)
-        if: matrix.platform == 'win'
-        run: node scripts/generate-latest-yml.cjs win
-
-      - name: Generate latest-mac.yml (macOS)
-        if: matrix.platform == 'mac'
-        run: node scripts/generate-latest-yml.cjs mac
-
-      - name: Generate latest-linux.yml (Linux)
-        if: matrix.platform == 'linux'
-        run: node scripts/generate-latest-yml.cjs linux
-
+      # latest*.yml are emitted by electron-builder (see publish: in
+      # electron-builder.yml) — no hand-rolled manifest step. Blockmaps ship
+      # alongside each installer so electron-updater can do differential updates.
       - name: Upload artifacts (Windows)
         if: matrix.platform == 'win'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-win
           path: |
             dist/PDFDecomposer-Setup-*.exe
-            dist/PDFDecomposer-portable.exe
+            dist/PDFDecomposer-Setup-*.exe.blockmap
+            dist/PDFDecomposer-*-portable.exe
             dist/latest.yml
           if-no-files-found: error
 
       - name: Upload artifacts (macOS)
         if: matrix.platform == 'mac'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-mac
           path: |
             dist/PDFDecomposer-*.dmg
+            dist/PDFDecomposer-*.dmg.blockmap
+            dist/PDFDecomposer-*.zip
+            dist/PDFDecomposer-*.zip.blockmap
             dist/latest-mac.yml
           if-no-files-found: error
 
       - name: Upload artifacts (Linux)
         if: matrix.platform == 'linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-linux
           path: |
             dist/PDFDecomposer-*.AppImage
+            dist/PDFDecomposer-*.AppImage.blockmap
             dist/latest-linux.yml
           if-no-files-found: error
 
@@ -119,13 +115,13 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/**
           generate_release_notes: true
