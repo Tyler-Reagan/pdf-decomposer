@@ -33,7 +33,12 @@
       "Bash(git tag *)",
       "Bash(git push *)",
       "Bash(clear *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(npx prettier *)",
+      "Bash(git add *)",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)",
+      "Bash(git ls-remote *)"
     ]
   }
 }
