@@ -206,7 +206,10 @@ export function OutputConfig() {
       const dir = getEffectiveDir(g);
       return {
         groupId: g.id,
-        outputPath: `${dir}/${fileName}`.replace(/\/\//g, "/"),
+        outputPath:
+          dir.replace(/[/\\]+$/, "") +
+          (dir.includes("\\") ? "\\" : "/") +
+          fileName,
         pageIndices: g.pageIndices,
       };
     });

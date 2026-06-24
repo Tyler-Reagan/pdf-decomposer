@@ -93,7 +93,12 @@ export function App() {
       {/* Draggable title bar */}
       <div
         className="flex-shrink-0 w-full flex items-center justify-between pr-2"
-        style={{ height: 38, WebkitAppRegion: "drag" } as React.CSSProperties}
+        style={{
+          height: 38,
+          WebkitAppRegion: "drag",
+          paddingRight:
+            window.electron?.process?.platform === "win32" ? 142 : undefined,
+        } as React.CSSProperties}
       >
         {/* Left: home / load different file */}
         <div className="flex items-center pl-20">

@@ -14,7 +14,7 @@ export function UpdateBanner() {
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
 
-  const isMac = window.electron.process.platform === "darwin";
+  const isMac = window.electron?.process?.platform === "darwin";
 
   useEffect(() => {
     const offAvailable = window.electronAPI.onUpdateAvailable(
@@ -133,7 +133,13 @@ export function UpdateBanner() {
               )}
               {state === "error" && (
                 <span className="text-red-300">
-                  Update failed — check your connection
+                  Update failed —{" "}
+                  <button
+                    onClick={() => window.open(RELEASES_URL)}
+                    className="underline cursor-pointer hover:text-red-200 transition-colors"
+                  >
+                    download manually
+                  </button>
                 </span>
               )}
             </span>
