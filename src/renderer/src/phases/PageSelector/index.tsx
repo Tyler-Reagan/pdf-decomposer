@@ -8,6 +8,14 @@ import { Button } from "../../components/Button";
 import { PdfPreview } from "../../components/PdfPreview";
 import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { PrototypeRotateDeletePanel } from "./prototype-rotate-delete";
+import { useProtoPageEdits } from "./prototype-rotate-delete/useProtoPageEdits";
+
+// PROTOTYPE HOOK — throwaway, ticket #7 (wayfinder map #4). Remove this
+// along with the prototype-rotate-delete/ directory once a variant is chosen.
+const PROTOTYPE_ROTATE_DELETE =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).has("variant");
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -263,6 +271,28 @@ export function PageSelector() {
   // Hooks must always run; bail out after they're declared.
   const totalPages = loadedPdf?.totalPages ?? 0;
 
+  // PROTOTYPE — throwaway, ticket #7 (wayfinder map #4). Lifted here (rather
+  // than inside the panel) so the real preview pane can reflect pending
+  // rotation too. Cheap to call unconditionally; remove with the rest of
+  // prototype-rotate-delete/ once a variant is chosen.
+  //
+  // While in prototype mode, webviewPage is repurposed to mean "current
+  // position in protoEdits.pages" (matching the current-position convention
+  // already locked for PageGroup.pageIndices/selectedPageIndices in ticket
+  // #5) rather than "original source page index" — a deleted page leaves no
+  // gap to navigate into, since the array itself has none. Clamp it back in
+  // bounds whenever a delete shrinks the array out from under the cursor.
+  const protoEdits = useProtoPageEdits(totalPages);
+  const protoFocusedPage = protoEdits.pages[webviewPage];
+
+  useEffect(() => {
+    if (!PROTOTYPE_ROTATE_DELETE) return;
+    if (webviewPage > protoEdits.pages.length - 1) {
+      setWebviewPage(Math.max(0, protoEdits.pages.length - 1));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [protoEdits.pages.length]);
+
   // Keep the synchronous cursor in step with mouse/lasso-driven page changes.
   useEffect(() => {
     cursorRef.current = webviewPage;
@@ -281,17 +311,24 @@ export function PageSelector() {
       )
         return;
 
+      // PROTOTYPE — throwaway, ticket #7: navigate over current position in
+      // protoEdits.pages (no gaps) rather than the original page count, so
+      // arrow keys never land on a deleted-but-unsaved page.
+      const navBound = PROTOTYPE_ROTATE_DELETE
+        ? protoEdits.pages.length
+        : totalPages;
+
       const cur = cursorRef.current;
       let next = cur;
       switch (e.key) {
         case "ArrowRight":
-          next = Math.min(cur + 1, totalPages - 1);
+          next = Math.min(cur + 1, navBound - 1);
           break;
         case "ArrowLeft":
           next = Math.max(cur - 1, 0);
           break;
         case "ArrowDown":
-          next = Math.min(cur + GRID_COLS, totalPages - 1);
+          next = Math.min(cur + GRID_COLS, navBound - 1);
           break;
         case "ArrowUp":
           next = Math.max(cur - GRID_COLS, 0);
@@ -317,7 +354,7 @@ export function PageSelector() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [totalPages, setSelectedPageIndices]);
+  }, [totalPages, setSelectedPageIndices, protoEdits.pages.length]);
 
   if (!loadedPdf) return null;
 
@@ -373,11 +410,38 @@ export function PageSelector() {
             <span className="text-ink-4 text-xs">PDF Preview</span>
             <span className="text-ink-3 text-xs tabular-nums">
               Page {webviewPage + 1}
-              <span className="text-ink-4"> / {totalPages}</span>
+              <span className="text-ink-4">
+                {" "}
+                /{" "}
+                {PROTOTYPE_ROTATE_DELETE ? protoEdits.pages.length : totalPages}
+              </span>
             </span>
           </div>
           <div className="flex-1 relative overflow-hidden min-h-0 bg-surf-1">
-            <PdfPreview pageIndex={webviewPage} />
+            {/* PROTOTYPE — throwaway rotation wrapper, ticket #7 */}
+            {PROTOTYPE_ROTATE_DELETE ? (
+              <div
+                className="w-full h-full"
+                style={{
+                  transform: `rotate(${protoFocusedPage?.rotation ?? 0}deg)`,
+                }}
+              >
+                {/* No CSS transition here on purpose: PdfPreview measures
+                    via getBoundingClientRect on mount (forced by the key
+                    below), which would otherwise fire mid-transition and
+                    size itself for a not-yet-rotated box. key forces a
+                    remount on rotation change so the measurement re-fires
+                    against the final rotated angle instead of stretching/
+                    clipping the bitmap it already had for the previous
+                    orientation. */}
+                <PdfPreview
+                  key={`${webviewPage}-${protoFocusedPage?.rotation ?? 0}`}
+                  pageIndex={protoFocusedPage?.originalIndex ?? webviewPage}
+                />
+              </div>
+            ) : (
+              <PdfPreview pageIndex={webviewPage} />
+            )}
           </div>
         </div>
 
@@ -393,52 +457,63 @@ export function PageSelector() {
           className="flex flex-col min-h-0 relative"
           style={{ flex: nodeGridFlex, minWidth: 0 }}
         >
-          <div className="px-3 py-2 text-ink-4 text-xs border-b border-bdr flex-shrink-0">
-            Click · Shift · Ctrl · Drag to select
-          </div>
+          {PROTOTYPE_ROTATE_DELETE ? (
+            <PrototypeRotateDeletePanel
+              totalPages={totalPages}
+              edits={protoEdits}
+              focusedIndex={webviewPage}
+              onFocusPage={setWebviewPage}
+            />
+          ) : (
+            <>
+              <div className="px-3 py-2 text-ink-4 text-xs border-b border-bdr flex-shrink-0">
+                Click · Shift · Ctrl · Drag to select
+              </div>
 
-          <div
-            ref={scrollContainerRef}
-            data-tour="page-grid"
-            className="flex-1 overflow-y-auto relative"
-            onMouseMove={handleGridMouseMove}
-            onMouseUp={handleGridMouseUp}
-            onMouseLeave={handleGridMouseUp}
-          >
-            <div
-              className={`grid gap-2 p-3 ${selectedPageIndices.size > 0 ? "pb-52" : ""}`}
-              style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)` }}
-            >
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PageNode
-                  key={i}
-                  pageIndex={i}
-                  group={groups.find((g) => g.pageIndices.includes(i))}
-                  isSelected={selectedPageIndices.has(i)}
-                  isFocused={i === webviewPage}
-                  onMouseDown={handleMouseDown}
-                  onMouseEnter={handleMouseEnter}
-                  nodeRef={getNodeRef(i)}
-                />
-              ))}
-            </div>
-
-            {lasso && (
               <div
-                className="absolute pointer-events-none border border-acc bg-acc/10 z-20"
-                style={{
-                  left: lasso.x,
-                  top: lasso.y,
-                  width: lasso.w,
-                  height: lasso.h,
-                }}
-              />
-            )}
-          </div>
+                ref={scrollContainerRef}
+                data-tour="page-grid"
+                className="flex-1 overflow-y-auto relative"
+                onMouseMove={handleGridMouseMove}
+                onMouseUp={handleGridMouseUp}
+                onMouseLeave={handleGridMouseUp}
+              >
+                <div
+                  className={`grid gap-2 p-3 ${selectedPageIndices.size > 0 ? "pb-52" : ""}`}
+                  style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)` }}
+                >
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <PageNode
+                      key={i}
+                      pageIndex={i}
+                      group={groups.find((g) => g.pageIndices.includes(i))}
+                      isSelected={selectedPageIndices.has(i)}
+                      isFocused={i === webviewPage}
+                      onMouseDown={handleMouseDown}
+                      onMouseEnter={handleMouseEnter}
+                      nodeRef={getNodeRef(i)}
+                    />
+                  ))}
+                </div>
 
-          <FloatingActionBar
-            visible={selectedPageIndices.size > 0 && !isLassoing}
-          />
+                {lasso && (
+                  <div
+                    className="absolute pointer-events-none border border-acc bg-acc/10 z-20"
+                    style={{
+                      left: lasso.x,
+                      top: lasso.y,
+                      width: lasso.w,
+                      height: lasso.h,
+                    }}
+                  />
+                )}
+              </div>
+
+              <FloatingActionBar
+                visible={selectedPageIndices.size > 0 && !isLassoing}
+              />
+            </>
+          )}
         </div>
 
         {/* Group panel */}
