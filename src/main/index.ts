@@ -2,7 +2,12 @@ import { app, shell, BrowserWindow, nativeTheme } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import { autoUpdater } from "electron-updater";
+import log from "electron-log/main";
 import { registerIpcHandlers } from "./ipc";
+
+log.initialize();
+log.transports.file.level = "info";
+autoUpdater.logger = log;
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({

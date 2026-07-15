@@ -13,6 +13,7 @@ export function UpdateBanner() {
   const [version, setVersion] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isMac = window.electron?.process?.platform === "darwin";
 
@@ -37,7 +38,8 @@ export function UpdateBanner() {
       setState("downloaded");
     });
 
-    const offError = window.electronAPI.onUpdateError(() => {
+    const offError = window.electronAPI.onUpdateError((message: string) => {
+      setErrorMessage(message);
       setState("error");
     });
 
@@ -60,7 +62,7 @@ export function UpdateBanner() {
   }
 
   function handleRetry() {
-    setState("available");
+    setErrorMessage(null);
     window.electronAPI.downloadUpdate();
     setState("downloading");
   }
@@ -133,7 +135,8 @@ export function UpdateBanner() {
               )}
               {state === "error" && (
                 <span className="text-red-300">
-                  Update failed —{" "}
+                  Update failed
+                  {errorMessage ? `: ${errorMessage}` : ""} —{" "}
                   <button
                     onClick={() => window.open(RELEASES_URL)}
                     className="underline cursor-pointer hover:text-red-200 transition-colors"
