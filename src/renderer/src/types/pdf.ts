@@ -33,6 +33,18 @@ export interface OutputFile {
   outputFilePath: string;
 }
 
+export interface PageState {
+  pageId: string; // stable identity, assigned once at load
+  originalIndex: number; // index in the source PDF at load time
+  rotation: 0 | 90 | 180 | 270; // delta on top of the source page's existing rotation
+}
+
+export interface PageEditSnapshot {
+  pages: PageState[];
+  groups: PageGroup[];
+  selectedPageIndices: Set<number>;
+}
+
 export const GROUP_COLORS = [
   "#6366f1", // indigo
   "#f59e0b", // amber

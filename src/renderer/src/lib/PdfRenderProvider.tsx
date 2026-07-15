@@ -263,6 +263,19 @@ function createStore(): {
           return;
         }
         doc = loaded;
+        // A reload while the grid stays mounted (e.g. right after Save,
+        // see reloadToken) drops every cached bitmap in dispose(), but
+        // components only re-request on a prop/visibility *change* — with
+        // nothing else prompting them, they'd sit on skeletons forever.
+        // Re-issue requests for whatever was visible/desired ourselves.
+        for (const pageIndex of visible) store.requestThumb(pageIndex);
+        if (desiredPreview) {
+          store.requestPreview(
+            desiredPreview.page,
+            desiredPreview.w,
+            desiredPreview.h,
+          );
+        }
         processQueue(); // drain anything requested while loading
       })
       .catch((err) => {
@@ -285,16 +298,28 @@ function createStore(): {
     isRendering = false;
     previewQueue = [];
     thumbQueue = [];
+
+    // Closed bitmaps must not be handed to a still-mounted consumer's next
+    // drawImage() call — notify every subscriber so useSyncExternalStore
+    // re-reads (now null) instead of a stale, closed reference. This matters
+    // beyond unmount/filePath-change: a Save-triggered reload (see
+    // reloadToken) disposes and re-inits while the grid stays mounted.
+    // `visible` and `desiredPreview` deliberately survive dispose() — they
+    // describe viewport/focus state, not document content, and init() uses
+    // them afterward to re-request what was on screen. (Real unmounts don't
+    // need them cleared either: the whole store is discarded with them.)
+    const closedThumbPages = [...thumbs.keys()];
     thumbs.forEach((b) => b.close());
     thumbs.clear();
     thumbErrors.clear();
     requested.clear();
-    visible.clear();
+    closedThumbPages.forEach(notifyThumb);
+
     previewBitmap?.close();
     previewBitmap = null;
     previewPage = null;
     previewError = false;
-    desiredPreview = null;
+    notifyPreview();
   }
 
   return { store, init, dispose };
@@ -304,9 +329,13 @@ const PdfRenderContext = createContext<PdfRenderStore | null>(null);
 
 export function PdfRenderProvider({
   filePath,
+  reloadToken,
   children,
 }: {
   filePath: string;
+  // Bump this (e.g. after a Save writes new bytes to filePath) to force a
+  // reload — the doc is otherwise only re-read when filePath itself changes.
+  reloadToken?: number;
   children: ReactNode;
 }) {
   const ref = useRef<ReturnType<typeof createStore> | null>(null);
@@ -316,7 +345,7 @@ export function PdfRenderProvider({
     if (!filePath) return;
     ref.current!.init(filePath);
     return () => ref.current!.dispose();
-  }, [filePath]);
+  }, [filePath, reloadToken]);
 
   return (
     <PdfRenderContext.Provider value={ref.current.store}>

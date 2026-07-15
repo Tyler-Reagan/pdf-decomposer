@@ -3,7 +3,8 @@ import { promises as fs } from "fs";
 import * as path from "path";
 import { PDFDocument } from "pdf-lib";
 import { splitPdf } from "../utils/pdf-splitter";
-import type { SplitPdfParams } from "../../shared/types";
+import { savePdf } from "../utils/save-pdf";
+import type { SplitPdfParams, SavePdfParams } from "../../shared/types";
 
 // Reject null bytes which can be used to truncate paths on some systems.
 function assertSafePath(filePath: string): void {
@@ -78,6 +79,11 @@ export function registerPdfHandlers(): void {
   // Split PDF
   ipcMain.handle("split-pdf", async (_event, params: SplitPdfParams) => {
     return splitPdf(params);
+  });
+
+  // Save pending rotate/delete edits back to the source file
+  ipcMain.handle("save-pdf", async (_event, params: SavePdfParams) => {
+    return savePdf(params);
   });
 
   // Open path in Explorer/Finder — restricted to directories only.

@@ -68,6 +68,7 @@ export function App() {
   const groups = usePdfStore((s) => s.groups);
   const reset = usePdfStore((s) => s.reset);
   const filePath = usePdfStore((s) => s.loadedPdf?.filePath ?? "");
+  const reloadToken = usePdfStore((s) => s.reloadToken);
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
   const { zoom, zoomIn, zoomOut, zoomReset, canZoomIn, canZoomOut, isDefault } =
@@ -93,12 +94,14 @@ export function App() {
       {/* Draggable title bar */}
       <div
         className="flex-shrink-0 w-full flex items-center justify-between pr-2"
-        style={{
-          height: 38,
-          WebkitAppRegion: "drag",
-          paddingRight:
-            window.electron?.process?.platform === "win32" ? 142 : undefined,
-        } as React.CSSProperties}
+        style={
+          {
+            height: 38,
+            WebkitAppRegion: "drag",
+            paddingRight:
+              window.electron?.process?.platform === "win32" ? 142 : undefined,
+          } as React.CSSProperties
+        }
       >
         {/* Left: home / load different file */}
         <div className="flex items-center pl-20">
@@ -201,7 +204,7 @@ export function App() {
 
       <UpdateBanner />
 
-      <PdfRenderProvider filePath={filePath}>
+      <PdfRenderProvider filePath={filePath} reloadToken={reloadToken}>
         <div className="flex-1 relative overflow-hidden">
           <AnimatePresence mode="wait">
             {phase === "drop" && (

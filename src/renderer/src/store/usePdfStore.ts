@@ -1,13 +1,18 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { enableMapSet } from "immer";
 import type {
   AppPhase,
   LoadedPdf,
   PageGroup,
+  PageState,
+  PageEditSnapshot,
   OutputFile,
   MetaGroup,
 } from "../types/pdf";
 import { GROUP_COLORS } from "../types/pdf";
+
+enableMapSet();
 
 let groupIdCounter = 0;
 const nextGroupId = (): string => `group-${++groupIdCounter}`;
@@ -23,6 +28,17 @@ interface PdfStore {
   // Loaded PDF
   loadedPdf: LoadedPdf | null;
   setLoadedPdf: (pdf: LoadedPdf) => void;
+
+  // Pending page edits (rotate/delete), see #5
+  pages: PageState[];
+  undoStack: PageEditSnapshot[];
+  redoStack: PageEditSnapshot[];
+  reloadToken: number; // bumped on successful save so renderers reload the file
+  rotatePage: (pageId: string, direction: "cw" | "ccw") => void;
+  deletePage: (pageId: string) => void;
+  undo: () => void;
+  redo: () => void;
+  commitSave: () => void;
 
   // Page selection
   selectedPageIndices: Set<number>;
@@ -84,6 +100,10 @@ interface PdfStore {
 const initialState = {
   phase: "drop" as AppPhase,
   loadedPdf: null,
+  pages: [] as PageState[],
+  undoStack: [] as PageEditSnapshot[],
+  redoStack: [] as PageEditSnapshot[],
+  reloadToken: 0,
   selectedPageIndices: new Set<number>(),
   groups: [],
   metaGroups: [],
@@ -110,11 +130,122 @@ export const usePdfStore = create<PdfStore>()(
     setLoadedPdf: (pdf) =>
       set((s) => {
         s.loadedPdf = pdf;
+        s.pages = Array.from({ length: pdf.totalPages }, (_, i) => ({
+          pageId: `page-${i}`,
+          originalIndex: i,
+          rotation: 0 as const,
+        }));
+        s.undoStack = [];
+        s.redoStack = [];
         s.groups = [];
         s.metaGroups = [];
         s.selectedPageIndices = new Set();
         s.outputFiles = [];
         s.saveDirectory = "";
+      }),
+
+    rotatePage: (pageId, direction) =>
+      set((s) => {
+        const page = s.pages.find((p) => p.pageId === pageId);
+        if (!page) return;
+        s.undoStack.push({
+          pages: s.pages.map((p) => ({ ...p })),
+          groups: s.groups.map((g) => ({
+            ...g,
+            pageIndices: [...g.pageIndices],
+          })),
+          selectedPageIndices: new Set(s.selectedPageIndices),
+        });
+        s.redoStack = [];
+        const delta = direction === "cw" ? 90 : -90;
+        page.rotation = ((((page.rotation + delta) % 360) + 360) % 360) as
+          | 0
+          | 90
+          | 180
+          | 270;
+      }),
+
+    deletePage: (pageId) =>
+      set((s) => {
+        if (s.pages.length <= 1) return;
+        const position = s.pages.findIndex((p) => p.pageId === pageId);
+        if (position === -1) return;
+
+        s.undoStack.push({
+          pages: s.pages.map((p) => ({ ...p })),
+          groups: s.groups.map((g) => ({
+            ...g,
+            pageIndices: [...g.pageIndices],
+          })),
+          selectedPageIndices: new Set(s.selectedPageIndices),
+        });
+        s.redoStack = [];
+
+        s.pages.splice(position, 1);
+
+        for (const g of s.groups) {
+          g.pageIndices = g.pageIndices
+            .filter((i) => i !== position)
+            .map((i) => (i > position ? i - 1 : i));
+        }
+
+        const nextSelected = new Set<number>();
+        for (const i of s.selectedPageIndices) {
+          if (i === position) continue;
+          nextSelected.add(i > position ? i - 1 : i);
+        }
+        s.selectedPageIndices = nextSelected;
+      }),
+
+    undo: () =>
+      set((s) => {
+        const snapshot = s.undoStack.pop();
+        if (!snapshot) return;
+        s.redoStack.push({
+          pages: s.pages.map((p) => ({ ...p })),
+          groups: s.groups.map((g) => ({
+            ...g,
+            pageIndices: [...g.pageIndices],
+          })),
+          selectedPageIndices: new Set(s.selectedPageIndices),
+        });
+        s.pages = snapshot.pages;
+        s.groups = snapshot.groups;
+        s.selectedPageIndices = snapshot.selectedPageIndices;
+      }),
+
+    redo: () =>
+      set((s) => {
+        const snapshot = s.redoStack.pop();
+        if (!snapshot) return;
+        s.undoStack.push({
+          pages: s.pages.map((p) => ({ ...p })),
+          groups: s.groups.map((g) => ({
+            ...g,
+            pageIndices: [...g.pageIndices],
+          })),
+          selectedPageIndices: new Set(s.selectedPageIndices),
+        });
+        s.pages = snapshot.pages;
+        s.groups = snapshot.groups;
+        s.selectedPageIndices = snapshot.selectedPageIndices;
+      }),
+
+    // A successful Save has just baked pending rotations/deletions into the
+    // source file on disk, so the file's page order now matches `pages`
+    // exactly — reset originalIndex to position and rotation to 0, and drop
+    // the undo/redo history since it referred to a file layout that no
+    // longer exists. Bump reloadToken so renderers re-read the new bytes.
+    commitSave: () =>
+      set((s) => {
+        s.pages = s.pages.map((p, i) => ({
+          ...p,
+          originalIndex: i,
+          rotation: 0,
+        }));
+        s.undoStack = [];
+        s.redoStack = [];
+        s.reloadToken += 1;
       }),
 
     setSelectedPageIndices: (indices) =>

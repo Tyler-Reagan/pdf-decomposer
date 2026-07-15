@@ -4,6 +4,8 @@ import type {
   SplitPdfParams,
   SplitPdfResult,
   SplitProgressEvent,
+  SavePdfParams,
+  SavePdfResult,
   UpdateInfo,
   DownloadProgress,
 } from "../shared/types";
@@ -28,6 +30,9 @@ const api = {
 
   splitPdf: (params: SplitPdfParams): Promise<SplitPdfResult> =>
     ipcRenderer.invoke("split-pdf", params),
+
+  savePdf: (params: SavePdfParams): Promise<SavePdfResult> =>
+    ipcRenderer.invoke("save-pdf", params),
 
   openPath: (pathToOpen: string): Promise<void> =>
     ipcRenderer.invoke("open-path", pathToOpen),

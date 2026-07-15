@@ -2,7 +2,9 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
+  useState,
   useSyncExternalStore,
 } from "react";
 import { motion } from "framer-motion";
@@ -12,27 +14,39 @@ import { useInViewport } from "../../lib/useInViewport";
 import { usePdfRender } from "../../lib/PdfRenderProvider";
 
 interface PageNodeProps {
+  // Current position in the grid (used for selection/group lookups and
+  // display — matches the current-position convention from #5).
+  position: number;
+  // Index of the underlying page in the loaded source PDF (used to fetch
+  // the correct thumbnail bitmap; stable across position-shifting deletes).
   pageIndex: number;
+  rotation: 0 | 90 | 180 | 270;
   group: PageGroup | undefined;
   isSelected: boolean;
   isFocused: boolean;
-  onMouseDown: (e: React.MouseEvent, index: number) => void;
-  onMouseEnter: (e: React.MouseEvent, index: number) => void;
+  onMouseDown: (e: React.MouseEvent, position: number) => void;
+  onMouseEnter: (e: React.MouseEvent, position: number) => void;
+  onContextMenu: (e: React.MouseEvent, position: number) => void;
   nodeRef: (el: HTMLDivElement | null) => void;
 }
 
 export const PageNode = memo(function PageNode({
+  position,
   pageIndex,
+  rotation,
   group,
   isSelected,
   isFocused,
   onMouseDown,
   onMouseEnter,
+  onContextMenu,
   nodeRef,
 }: PageNodeProps) {
   const store = usePdfRender();
   const cardRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [boxSize, setBoxSize] = useState({ w: 0, h: 0 });
 
   // Merge the parent's geometry ref (used by the lasso) with our own, which
   // the viewport observer needs.
@@ -74,8 +88,40 @@ export const PageNode = memo(function PageNode({
     if (!canvas || !bitmap) return;
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
-    canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+    try {
+      canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+    } catch {
+      // Bitmap was closed by a concurrent reload (e.g. right after Save);
+      // the next store notification will hand us a fresh one (or null).
+    }
   }, [bitmap]);
+
+  // Measure the box's own (unrotated) content area so a rotated bitmap can
+  // be scaled to fit inside it instead of clipping.
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setBoxSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Contain-fit the bitmap within the box at its *current* orientation —
+  // width/height swap for a 90/270 rotation — so landscape-after-rotation
+  // pages scale down and letterbox instead of overflowing.
+  let displayW = 0;
+  let displayH = 0;
+  if (bitmap && boxSize.w > 0 && boxSize.h > 0) {
+    const rotated = rotation === 90 || rotation === 270;
+    const contentW = rotated ? bitmap.height : bitmap.width;
+    const contentH = rotated ? bitmap.width : bitmap.height;
+    const scale = Math.min(boxSize.w / contentW, boxSize.h / contentH);
+    displayW = bitmap.width * scale;
+    displayH = bitmap.height * scale;
+  }
 
   const borderColor = isSelected
     ? "var(--acc)"
@@ -90,9 +136,13 @@ export const PageNode = memo(function PageNode({
   return (
     <div
       ref={setRefs}
-      data-page-index={pageIndex}
-      onMouseDown={(e) => onMouseDown(e, pageIndex)}
-      onMouseEnter={(e) => onMouseEnter(e, pageIndex)}
+      data-page-index={position}
+      onMouseDown={(e) => onMouseDown(e, position)}
+      onMouseEnter={(e) => onMouseEnter(e, position)}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        onContextMenu(e, position);
+      }}
       className="relative select-none cursor-pointer"
       style={{ aspectRatio: "3 / 4", userSelect: "none" }}
     >
@@ -137,12 +187,20 @@ export const PageNode = memo(function PageNode({
         )}
 
         {/* Rendered page content (lazy) */}
-        <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-surf-1">
+        <div
+          ref={boxRef}
+          className="flex-1 min-h-0 flex items-center justify-center overflow-hidden bg-surf-1"
+        >
           {bitmap ? (
             <canvas
               ref={canvasRef}
-              className="max-w-full max-h-full"
-              style={{ width: "auto", height: "auto", display: "block" }}
+              className="transition-transform duration-150"
+              style={{
+                width: displayW || "auto",
+                height: displayH || "auto",
+                display: "block",
+                transform: `rotate(${rotation}deg)`,
+              }}
             />
           ) : hasError ? (
             <AlertCircle
@@ -158,7 +216,7 @@ export const PageNode = memo(function PageNode({
 
         <div className="bg-surf-2/70 text-center py-0.5 flex-shrink-0">
           <span className="text-ink-3 text-[9px] font-medium">
-            {pageIndex + 1}
+            {position + 1}
           </span>
         </div>
       </motion.div>

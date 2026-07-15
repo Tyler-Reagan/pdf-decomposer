@@ -65,7 +65,12 @@ export function PdfPreview({ pageIndex }: { pageIndex: number }) {
     if (!canvas || !bitmap) return;
     canvas.width = bitmap.width;
     canvas.height = bitmap.height;
-    canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+    try {
+      canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+    } catch {
+      // Bitmap was closed by a concurrent reload (e.g. right after Save);
+      // the next store notification will hand us a fresh one (or null).
+    }
   }, [bitmap]);
 
   return (

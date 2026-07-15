@@ -42,3 +42,18 @@ export interface PdfInfo {
   pageCount: number;
   fileSizeBytes: number;
 }
+
+export interface SavePdfPageSpec {
+  originalIndex: number;
+  rotationDelta: 0 | 90 | 180 | 270; // added to page's existing getRotation()
+}
+
+export interface SavePdfParams {
+  sourcePath: string;
+  pages: SavePdfPageSpec[]; // final order/content — omitted originalIndex = deleted
+}
+
+export interface SavePdfResult {
+  success: boolean;
+  error?: string;
+}

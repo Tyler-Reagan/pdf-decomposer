@@ -1,13 +1,18 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PageNode } from "./PageNode";
 import { GroupPanel } from "./GroupPanel";
 import { FloatingActionBar } from "./FloatingActionBar";
+import { PageEditToolbar } from "./PageEditToolbar";
+import { PageContextMenu } from "./PageContextMenu";
+import { SaveConfirmModal } from "./SaveConfirmModal";
+import { SaveGatePopover } from "./SaveGatePopover";
 import { Button } from "../../components/Button";
 import { PdfPreview } from "../../components/PdfPreview";
 import { useSplitPaneResize } from "../../lib/useSplitPaneResize";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { SavePdfParams } from "../../../../shared/types";
 
 const NODE_GRID_FLEX_DEFAULT = 0.35;
 const NODE_GRID_FLEX_MIN = 0.08;
@@ -17,6 +22,14 @@ const GRID_COLS = 4;
 export function PageSelector() {
   const {
     loadedPdf,
+    pages,
+    undoStack,
+    redoStack,
+    rotatePage,
+    deletePage,
+    undo,
+    redo,
+    commitSave,
     selectedPageIndices,
     setSelectedPageIndices,
     clearSelection,
@@ -25,6 +38,14 @@ export function PageSelector() {
   } = usePdfStore(
     useShallow((s) => ({
       loadedPdf: s.loadedPdf,
+      pages: s.pages,
+      undoStack: s.undoStack,
+      redoStack: s.redoStack,
+      rotatePage: s.rotatePage,
+      deletePage: s.deletePage,
+      undo: s.undo,
+      redo: s.redo,
+      commitSave: s.commitSave,
       selectedPageIndices: s.selectedPageIndices,
       setSelectedPageIndices: s.setSelectedPageIndices,
       clearSelection: s.clearSelection,
@@ -36,6 +57,16 @@ export function PageSelector() {
   const [webviewPage, setWebviewPage] = useState(0);
   const [nodeGridFlex, setNodeGridFlex] = useState(NODE_GRID_FLEX_DEFAULT);
   const [isLassoing, setIsLassoing] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    pageId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [confirmSaveOpen, setConfirmSaveOpen] = useState(false);
+  const [showSaveGate, setShowSaveGate] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savedFlash, setSavedFlash] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [lasso, setLasso] = useState<{
     x: number;
@@ -261,7 +292,82 @@ export function PageSelector() {
     groups.length > 0 && groups.some((g) => g.pageIndices.length > 0);
 
   // Hooks must always run; bail out after they're declared.
-  const totalPages = loadedPdf?.totalPages ?? 0;
+  const originalTotalPages = loadedPdf?.totalPages ?? 0;
+  const totalPages = pages.length;
+
+  const dirty = useMemo(
+    () =>
+      pages.length !== originalTotalPages ||
+      pages.some((p) => p.rotation !== 0),
+    [pages, originalTotalPages],
+  );
+  const canUndo = undoStack.length > 0;
+  const canRedo = redoStack.length > 0;
+  const rotatedCount = pages.filter((p) => p.rotation !== 0).length;
+  const deletedCount = originalTotalPages - pages.length;
+
+  const rotateSelection = useCallback(
+    (direction: "cw" | "ccw") => {
+      for (const position of selectedPageIndices) {
+        const pageId = pages[position]?.pageId;
+        if (pageId) rotatePage(pageId, direction);
+      }
+    },
+    [selectedPageIndices, pages, rotatePage],
+  );
+
+  const deleteSelection = useCallback(() => {
+    const pageIds = [...selectedPageIndices]
+      .map((position) => pages[position]?.pageId)
+      .filter((id): id is string => Boolean(id));
+    for (const pageId of pageIds) deletePage(pageId);
+    clearSelection();
+  }, [selectedPageIndices, pages, deletePage, clearSelection]);
+
+  const canDeleteSelection = pages.length - selectedPageIndices.size >= 1;
+
+  const runSave = useCallback(async () => {
+    if (!loadedPdf) return;
+    setSaving(true);
+    setSaveError(null);
+    const params: SavePdfParams = {
+      sourcePath: loadedPdf.filePath,
+      pages: pages.map((p) => ({
+        originalIndex: p.originalIndex,
+        rotationDelta: p.rotation,
+      })),
+    };
+    const result = await window.electronAPI.savePdf(params);
+    setSaving(false);
+    if (result.success) {
+      commitSave();
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 1600);
+    } else {
+      setSaveError(result.error ?? "Failed to save the PDF.");
+    }
+  }, [loadedPdf, pages, commitSave]);
+
+  const handleSaveClick = useCallback(() => {
+    setShowSaveGate(false);
+    setConfirmSaveOpen(true);
+  }, []);
+
+  const handleConfirmSave = useCallback(() => {
+    setConfirmSaveOpen(false);
+    void runSave();
+  }, [runSave]);
+
+  // Once deletions are pending, arrow-key/webview navigation must operate on
+  // current position (this array has no gaps) rather than the original page
+  // count — otherwise arrow-keying across a deleted-but-unsaved page leaves
+  // focus with nothing to land on. Clamp the cursor back in bounds whenever
+  // a delete shrinks the array out from under it.
+  useEffect(() => {
+    if (webviewPage > pages.length - 1) {
+      setWebviewPage(Math.max(0, pages.length - 1));
+    }
+  }, [pages.length, webviewPage]);
 
   // Keep the synchronous cursor in step with mouse/lasso-driven page changes.
   useEffect(() => {
@@ -343,7 +449,7 @@ export function PageSelector() {
           <p className="text-ink-3 text-sm">{totalPages} pages</p>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-3 flex-shrink-0 relative">
           {selectedPageIndices.size > 0 && (
             <span className="text-ink-3 text-sm">
               {selectedPageIndices.size} selected
@@ -351,15 +457,45 @@ export function PageSelector() {
           )}
           <Button
             variant="primary"
-            disabled={!canContinue}
-            onClick={() => setPhase("configuring")}
+            // Never natively `disabled` while dirty — a disabled element
+            // suppresses click/hover entirely, and the gate popover (#8)
+            // needs both to fire. Disable natively only for the unrelated
+            // "no groups assigned yet" case.
+            disabled={!dirty && !canContinue}
+            onClick={() => {
+              if (dirty) {
+                setShowSaveGate((v) => !v);
+                return;
+              }
+              if (canContinue) setPhase("configuring");
+            }}
+            onMouseEnter={() => {
+              if (dirty) setShowSaveGate(true);
+            }}
+            onMouseLeave={() => setShowSaveGate(false)}
+            style={dirty ? { opacity: 0.4, cursor: "not-allowed" } : undefined}
             data-tour="configure-output-btn"
           >
             Configure Output
             <ChevronRight size={16} strokeWidth={2} />
           </Button>
+          {showSaveGate && dirty && (
+            <SaveGatePopover onSaveClick={handleSaveClick} />
+          )}
         </div>
       </div>
+
+      {saveError && (
+        <div className="px-6 py-2 bg-red-500/10 border-b border-red-500/20 text-red-500 text-xs flex items-center justify-between flex-shrink-0">
+          <span>{saveError}</span>
+          <button
+            onClick={() => setSaveError(null)}
+            className="text-red-500 hover:text-red-400 cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Content row */}
       <div className="flex flex-1 min-h-0">
@@ -377,7 +513,25 @@ export function PageSelector() {
             </span>
           </div>
           <div className="flex-1 relative overflow-hidden min-h-0 bg-surf-1">
-            <PdfPreview pageIndex={webviewPage} />
+            {/* No CSS transition on this wrapper on purpose: PdfPreview
+                measures its box via getBoundingClientRect on mount (forced
+                by the key below), which would otherwise fire mid-transition
+                and size itself for a not-yet-rotated box. The key forces a
+                remount on rotation change so the measurement re-fires
+                against the final rotated angle instead of stretching or
+                clipping the bitmap it already had for the previous
+                orientation. */}
+            <div
+              className="w-full h-full"
+              style={{
+                transform: `rotate(${pages[webviewPage]?.rotation ?? 0}deg)`,
+              }}
+            >
+              <PdfPreview
+                key={`${webviewPage}-${pages[webviewPage]?.rotation ?? 0}`}
+                pageIndex={pages[webviewPage]?.originalIndex ?? webviewPage}
+              />
+            </div>
           </div>
         </div>
 
@@ -393,9 +547,20 @@ export function PageSelector() {
           className="flex flex-col min-h-0 relative"
           style={{ flex: nodeGridFlex, minWidth: 0 }}
         >
-          <div className="px-3 py-2 text-ink-4 text-xs border-b border-bdr flex-shrink-0">
-            Click · Shift · Ctrl · Drag to select
-          </div>
+          <PageEditToolbar
+            hasSelection={selectedPageIndices.size > 0}
+            canDeleteSelection={canDeleteSelection}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            dirty={dirty}
+            saving={saving}
+            savedFlash={savedFlash}
+            onRotateSelection={rotateSelection}
+            onDeleteSelection={deleteSelection}
+            onUndo={undo}
+            onRedo={redo}
+            onSaveClick={handleSaveClick}
+          />
 
           <div
             ref={scrollContainerRef}
@@ -409,16 +574,25 @@ export function PageSelector() {
               className={`grid gap-2 p-3 ${selectedPageIndices.size > 0 ? "pb-52" : ""}`}
               style={{ gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)` }}
             >
-              {Array.from({ length: totalPages }, (_, i) => (
+              {pages.map((page, position) => (
                 <PageNode
-                  key={i}
-                  pageIndex={i}
-                  group={groups.find((g) => g.pageIndices.includes(i))}
-                  isSelected={selectedPageIndices.has(i)}
-                  isFocused={i === webviewPage}
+                  key={page.pageId}
+                  position={position}
+                  pageIndex={page.originalIndex}
+                  rotation={page.rotation}
+                  group={groups.find((g) => g.pageIndices.includes(position))}
+                  isSelected={selectedPageIndices.has(position)}
+                  isFocused={position === webviewPage}
                   onMouseDown={handleMouseDown}
                   onMouseEnter={handleMouseEnter}
-                  nodeRef={getNodeRef(i)}
+                  onContextMenu={(e, pos) =>
+                    setContextMenu({
+                      pageId: pages[pos].pageId,
+                      x: e.clientX,
+                      y: e.clientY,
+                    })
+                  }
+                  nodeRef={getNodeRef(position)}
                 />
               ))}
             </div>
@@ -439,6 +613,28 @@ export function PageSelector() {
           <FloatingActionBar
             visible={selectedPageIndices.size > 0 && !isLassoing}
           />
+
+          {contextMenu && (
+            <PageContextMenu
+              x={contextMenu.x}
+              y={contextMenu.y}
+              canDelete={pages.length > 1}
+              onRotate={(direction) =>
+                rotatePage(contextMenu.pageId, direction)
+              }
+              onDelete={() => deletePage(contextMenu.pageId)}
+              onClose={() => setContextMenu(null)}
+            />
+          )}
+
+          {confirmSaveOpen && (
+            <SaveConfirmModal
+              rotatedCount={rotatedCount}
+              deletedCount={deletedCount}
+              onCancel={() => setConfirmSaveOpen(false)}
+              onConfirm={handleConfirmSave}
+            />
+          )}
         </div>
 
         {/* Group panel */}
