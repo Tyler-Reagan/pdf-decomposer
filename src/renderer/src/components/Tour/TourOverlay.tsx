@@ -10,25 +10,6 @@ const TOOLTIP_W = 296;
 const TOOLTIP_OFFSET = 14;
 const TOOLTIP_H_EST = 210;
 
-const PHASE_ORDER = [
-  "drop",
-  "selecting",
-  "configuring",
-  "processing",
-  "complete",
-  "error",
-] as const;
-type AppPhase = (typeof PHASE_ORDER)[number];
-
-function phaseIndex(phase: AppPhase): number {
-  return PHASE_ORDER.indexOf(phase);
-}
-
-const STEP_PHASE_GATE: Record<number, AppPhase> = {
-  0: "selecting",
-  4: "configuring",
-};
-
 interface ResolvedPos {
   top: number;
   left: number;
@@ -92,6 +73,8 @@ export function TourOverlay() {
     totalSteps,
     isFirst,
     isLast,
+    blocked,
+    gateMessage,
     next,
     prev,
     dismiss,
@@ -109,11 +92,6 @@ export function TourOverlay() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [loadingDemo, setLoadingDemo] = useState(false);
 
-  const requiredPhase = STEP_PHASE_GATE[stepIndex];
-  const nextBlocked =
-    requiredPhase !== undefined &&
-    phaseIndex(phase as AppPhase) < phaseIndex(requiredPhase);
-
   const measureTarget = useCallback(() => {
     if (!currentStep) return;
     const el = document.querySelector<HTMLElement>(
@@ -129,16 +107,6 @@ export function TourOverlay() {
     const id = setInterval(measureTarget, 200);
     return () => clearInterval(id);
   }, [tourActive, measureTarget]);
-
-  useEffect(() => {
-    if (!tourActive) return;
-    const required = STEP_PHASE_GATE[stepIndex];
-    if (!required) return;
-    if (phaseIndex(phase as AppPhase) >= phaseIndex(required)) {
-      const t = setTimeout(() => next(), 600);
-      return () => clearTimeout(t);
-    }
-  }, [tourActive, phase, stepIndex, next]);
 
   useEffect(() => {
     if (!tourActive) return;
@@ -169,7 +137,7 @@ export function TourOverlay() {
           active !== document.documentElement;
         if (!appHasFocus) {
           e.stopImmediatePropagation();
-          if (e.key === "ArrowRight" && !nextBlocked) next();
+          if (e.key === "ArrowRight" && !blocked) next();
           else prev();
           return;
         }
@@ -184,7 +152,7 @@ export function TourOverlay() {
     window.addEventListener("keydown", handler, { capture: true });
     return () =>
       window.removeEventListener("keydown", handler, { capture: true });
-  }, [tourActive, next, prev, dismiss, nextBlocked]);
+  }, [tourActive, next, prev, dismiss, blocked]);
 
   const handleLoadDemo = useCallback(async () => {
     if (loadingDemo) return;
@@ -316,7 +284,7 @@ export function TourOverlay() {
                     {currentStep.description}
                   </p>
 
-                  {currentStep.hint && !nextBlocked && (
+                  {currentStep.hint && !blocked && (
                     <div className="mt-3 flex gap-2 items-start bg-acc/10 border border-acc/20 rounded-lg px-3 py-2">
                       <svg
                         className="flex-shrink-0 mt-0.5 text-acc"
@@ -382,18 +350,14 @@ export function TourOverlay() {
                     </motion.div>
                   )}
 
-                  {nextBlocked && (
+                  {blocked && gateMessage && (
                     <motion.p
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="mt-3 text-[11px] leading-snug"
                       style={{ color: "var(--warn)" }}
                     >
-                      {stepIndex === 0
-                        ? "Load a PDF to continue the tour."
-                        : stepIndex === 4
-                          ? "Click 'Configure Output' above to continue."
-                          : "Navigate to that step in the app to continue."}
+                      {gateMessage}
                     </motion.p>
                   )}
                 </div>
@@ -408,8 +372,8 @@ export function TourOverlay() {
                     ← Back
                   </button>
                   <button
-                    onClick={nextBlocked ? undefined : next}
-                    disabled={nextBlocked}
+                    onClick={blocked ? undefined : next}
+                    disabled={blocked}
                     className="px-3 py-1.5 rounded-lg bg-acc hover:bg-acc-hi disabled:bg-ctrl disabled:text-ink-3 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors cursor-pointer"
                   >
                     {isLast ? "Done" : "Next →"}

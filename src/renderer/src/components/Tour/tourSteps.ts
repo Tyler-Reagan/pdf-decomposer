@@ -1,11 +1,15 @@
+import type { AppPhase } from "../../types/pdf";
+
 export type TourPlacement = "top" | "bottom" | "left" | "right";
 
-interface TourStep {
+export interface TourStep {
   target: string; // data-tour attribute value
   title: string;
   description: string;
   hint?: string; // explicit call-to-action shown in the dialog
   placement: TourPlacement;
+  requiresPhase?: AppPhase; // gate: app must reach this phase to advance past the step
+  gateMessage?: string; // shown while the gate blocks the step
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -16,6 +20,8 @@ export const TOUR_STEPS: TourStep[] = [
       "Drag and drop any PDF here, or click to browse. Your file stays on your machine — nothing is uploaded.",
     // No hint — the demo button and gate notice handle guidance here.
     placement: "bottom",
+    requiresPhase: "selecting",
+    gateMessage: "Load a PDF to continue the tour.",
   },
   {
     target: "page-grid",
@@ -48,6 +54,8 @@ export const TOUR_STEPS: TourStep[] = [
       "Once you're happy with your groups, click 'Configure Output' to set filenames and choose where each PDF will be saved.",
     hint: "Click the 'Configure Output' button above to continue.",
     placement: "bottom",
+    requiresPhase: "configuring",
+    gateMessage: "Click 'Configure Output' above to continue.",
   },
   {
     target: "output-config",

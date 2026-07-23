@@ -6,6 +6,18 @@ export type AppPhase =
   | "complete"
   | "error";
 
+export const PHASE_SEQUENCE = [
+  "drop",
+  "selecting",
+  "configuring",
+  "processing",
+  "complete",
+] as const satisfies readonly AppPhase[];
+
+export function phaseRank(phase: AppPhase): number {
+  return (PHASE_SEQUENCE as readonly AppPhase[]).indexOf(phase);
+}
+
 export interface LoadedPdf {
   filePath: string;
   fileName: string;
