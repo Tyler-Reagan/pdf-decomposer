@@ -5,16 +5,6 @@ directories:
   buildResources: resources
   output: dist
 
-# Drives electron-builder's auto-update metadata: with a publish provider set it
-# emits latest.yml / latest-mac.yml / latest-linux.yml (referencing the update
-# artifacts, blockmaps, and both macOS arches) and bakes app-update.yml into the
-# app. Builds run with `--publish never`, so nothing is uploaded here — the
-# workflow publishes the release — but the manifests are generated locally.
-publish:
-  provider: github
-  owner: Tyler-Reagan
-  repo: pdf-decomposer
-
 files:
   - out/**/*
 
@@ -30,11 +20,13 @@ win:
     - target: nsis
       arch:
         - x64
-    - target: portable
-      arch:
-        - x64
   icon: resources/icon.ico
 
+# Assisted (non-one-click) installer, per-user by default. electron-builder's
+# NSIS target keys off appId/productName to detect an existing install at the
+# same location and replaces it in place — running Setup.exe for a new version
+# over an old install upgrades it rather than creating a second copy, and
+# leaves a single Add/Remove Programs entry for uninstalling.
 nsis:
   artifactName: PDFDecomposer-Setup-${version}.exe
   oneClick: false
@@ -42,23 +34,14 @@ nsis:
   allowToChangeInstallationDirectory: true
   installerIcon: resources/icon.ico
   uninstallerIcon: resources/icon.ico
+  uninstallDisplayName: PDF Decomposer
   createDesktopShortcut: true
   createStartMenuShortcut: true
 
-portable:
-  artifactName: PDFDecomposer-${version}-portable.exe
-
 mac:
-  # zip is required alongside dmg: electron-updater applies macOS updates via
-  # Squirrel.Mac, which consumes the zip (the dmg is download-only). artifactName
-  # here names the zip (dmg has its own block below) to match the dmg convention.
   artifactName: PDFDecomposer-${version}-${arch}.${ext}
   target:
     - target: dmg
-      arch:
-        - x64
-        - arm64
-    - target: zip
       arch:
         - x64
         - arm64

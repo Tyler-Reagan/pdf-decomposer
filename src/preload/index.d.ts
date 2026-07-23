@@ -5,8 +5,6 @@ import type {
   SplitProgressEvent,
   SavePdfParams,
   SavePdfResult,
-  UpdateInfo,
-  DownloadProgress,
   PdfInfo,
 } from "../shared/types";
 
@@ -20,13 +18,8 @@ export interface ElectronAppAPI {
   savePdf(params: SavePdfParams): Promise<SavePdfResult>;
   openPath(pathToOpen: string): Promise<void>;
   onSplitProgress(callback: (event: SplitProgressEvent) => void): () => void;
-  onUpdateAvailable(callback: (info: UpdateInfo) => void): () => void;
-  onUpdateProgress(callback: (progress: DownloadProgress) => void): () => void;
-  onUpdateDownloaded(callback: (info: UpdateInfo) => void): () => void;
-  onUpdateError(callback: (message: string) => void): () => void;
-  downloadUpdate(): Promise<void>;
-  installUpdate(): void;
   getDemoPdfPath(): Promise<string>;
+  getAppVersion(): Promise<string>;
 }
 
 declare global {

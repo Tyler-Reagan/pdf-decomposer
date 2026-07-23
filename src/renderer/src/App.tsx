@@ -5,11 +5,25 @@ import { DropZone } from "./phases/DropZone";
 import { PageSelector } from "./phases/PageSelector";
 import { OutputConfig } from "./phases/OutputConfig";
 import { Processing, Complete, ErrorScreen } from "./phases/Processing";
-import { UpdateBanner } from "./components/UpdateBanner";
 import { TourOverlay } from "./components/Tour/TourOverlay";
 import { useTour } from "./components/Tour/useTour";
 import { PdfRenderProvider } from "./lib/PdfRenderProvider";
-import { Home, Minus, Plus, AlertCircle, Sun, Moon } from "lucide-react";
+import {
+  TITLE_BAR_HEIGHT,
+  WIN_TITLE_BAR_CONTROLS_WIDTH,
+} from "../../shared/window-chrome";
+import {
+  Home,
+  Minus,
+  Plus,
+  AlertCircle,
+  Sun,
+  Moon,
+  Download,
+} from "lucide-react";
+
+const RELEASES_URL =
+  "https://github.com/Tyler-Reagan/pdf-decomposer/releases/latest";
 
 function useTheme() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -63,6 +77,16 @@ function useZoom() {
   };
 }
 
+function useAppVersion() {
+  const [version, setVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.electronAPI.getAppVersion().then(setVersion);
+  }, []);
+
+  return version;
+}
+
 export function App() {
   const phase = usePdfStore((s) => s.phase);
   const groups = usePdfStore((s) => s.groups);
@@ -71,6 +95,7 @@ export function App() {
   const reloadToken = usePdfStore((s) => s.reloadToken);
   const { tourActive, resume, stepIndex, totalSteps } = useTour();
   const { theme, toggleTheme } = useTheme();
+  const appVersion = useAppVersion();
   const { zoom, zoomIn, zoomOut, zoomReset, canZoomIn, canZoomOut, isDefault } =
     useZoom();
 
@@ -93,18 +118,20 @@ export function App() {
     <div className="h-screen flex flex-col overflow-hidden bg-surf-2 text-ink-1 ring-1 ring-bdr/40">
       {/* Draggable title bar */}
       <div
-        className="flex-shrink-0 w-full flex items-center justify-between pr-2"
+        className="flex-shrink-0 w-full grid grid-cols-[1fr_auto_1fr] items-center pr-2"
         style={
           {
-            height: 38,
+            height: TITLE_BAR_HEIGHT,
             WebkitAppRegion: "drag",
             paddingRight:
-              window.electron?.process?.platform === "win32" ? 142 : undefined,
+              window.electron?.process?.platform === "win32"
+                ? WIN_TITLE_BAR_CONTROLS_WIDTH
+                : undefined,
           } as React.CSSProperties
         }
       >
         {/* Left: home / load different file */}
-        <div className="flex items-center pl-20">
+        <div className="flex items-center pl-20 justify-self-start">
           <AnimatePresence>
             {showHomeButton && (
               <motion.button
@@ -116,9 +143,9 @@ export function App() {
                 onClick={handleHome}
                 title="Load a different file"
                 style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-                className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-4 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
+                className="h-8 flex items-center gap-1.5 px-2.5 rounded-md text-ink-4 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-xs font-medium"
               >
-                <Home size={12} strokeWidth={2} />
+                <Home size={14} strokeWidth={2} />
                 <span>Home</span>
               </motion.button>
             )}
@@ -127,23 +154,23 @@ export function App() {
 
         {/* Center: zoom controls */}
         <div
-          className="flex items-center gap-0.5"
+          className="flex items-center gap-0.5 justify-self-center"
           style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
         >
           <button
             onClick={zoomOut}
             disabled={!canZoomOut}
             title="Zoom out"
-            className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <Minus size={10} strokeWidth={2.5} />
+            <Minus size={13} strokeWidth={2.5} />
           </button>
           <button
             onClick={isDefault ? undefined : zoomReset}
             title={
               isDefault ? `Zoom: ${Math.round(zoom * 100)}%` : "Reset zoom"
             }
-            className={`h-6 px-1.5 rounded text-[10px] font-mono tabular-nums transition-colors duration-150 ${isDefault ? "text-ink-4 cursor-default" : "text-ink-2 hover:bg-surf-1 cursor-pointer"}`}
+            className={`h-8 px-2 rounded text-xs font-mono tabular-nums transition-colors duration-150 ${isDefault ? "text-ink-4 cursor-default" : "text-ink-2 hover:bg-surf-1 cursor-pointer"}`}
           >
             {Math.round(zoom * 100)}%
           </button>
@@ -151,25 +178,41 @@ export function App() {
             onClick={zoomIn}
             disabled={!canZoomIn}
             title="Zoom in"
-            className="w-6 h-6 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
+            className="w-8 h-8 flex items-center justify-center rounded text-ink-4 hover:text-ink-1 hover:bg-surf-1 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150 cursor-pointer"
           >
-            <Plus size={10} strokeWidth={2.5} />
+            <Plus size={13} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Right: theme toggle + tour button */}
-        <div className="flex items-center gap-1">
+        {/* Right: check for updates + theme toggle + tour button */}
+        <div className="flex items-center gap-1 justify-self-end">
+          {/* Version + check for updates */}
+          {appVersion && (
+            <span className="text-ink-4 text-xs font-mono tabular-nums px-1">
+              v{appVersion}
+            </span>
+          )}
+          <button
+            onClick={() => window.open(RELEASES_URL)}
+            style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-xs font-medium"
+            title="Check for updates on GitHub"
+          >
+            <Download size={16} strokeWidth={2} />
+            <span>Check for Updates</span>
+          </button>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
             style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}
-            className="h-7 flex items-center gap-1.5 px-2 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-[11px] font-medium"
+            className="h-8 flex items-center gap-1.5 px-2.5 rounded-md text-ink-3 hover:text-ink-1 hover:bg-surf-1 border border-transparent hover:border-bdr transition-all duration-150 cursor-pointer text-xs font-medium"
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
           >
             {theme === "dark" ? (
-              <Sun size={14} strokeWidth={2} />
+              <Sun size={16} strokeWidth={2} />
             ) : (
-              <Moon size={14} strokeWidth={2} />
+              <Moon size={16} strokeWidth={2} />
             )}
             <span>{theme === "dark" ? "Light" : "Dark"}</span>
           </button>
@@ -192,17 +235,15 @@ export function App() {
                       "0 0 0 2px color-mix(in oklch, var(--acc) 40%, transparent)",
                   } as React.CSSProperties
                 }
-                className="h-7 flex items-center gap-1.5 px-2 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-[11px] font-medium"
+                className="h-8 flex items-center gap-1.5 px-2.5 rounded-md bg-acc/10 border border-acc/40 text-acc hover:bg-acc/20 hover:border-acc/70 transition-all duration-150 cursor-pointer text-xs font-medium"
               >
-                <AlertCircle size={12} strokeWidth={2.5} />
+                <AlertCircle size={14} strokeWidth={2.5} />
                 <span>Tour</span>
               </motion.button>
             )}
           </AnimatePresence>
         </div>
       </div>
-
-      <UpdateBanner />
 
       <PdfRenderProvider filePath={filePath} reloadToken={reloadToken}>
         <div className="flex-1 relative overflow-hidden">

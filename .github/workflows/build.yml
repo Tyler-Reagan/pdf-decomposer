@@ -102,9 +102,6 @@ jobs:
         if: matrix.platform == 'linux'
         run: npm run dist -- --linux --publish never
 
-      # latest*.yml are emitted by electron-builder (see publish: in
-      # electron-builder.yml) — no hand-rolled manifest step. Blockmaps ship
-      # alongside each installer so electron-updater can do differential updates.
       - name: Upload artifacts (Windows)
         if: matrix.platform == 'win'
         uses: actions/upload-artifact@v7
@@ -112,9 +109,6 @@ jobs:
           name: dist-win
           path: |
             dist/PDFDecomposer-Setup-*.exe
-            dist/PDFDecomposer-Setup-*.exe.blockmap
-            dist/PDFDecomposer-*-portable.exe
-            dist/latest.yml
           if-no-files-found: error
 
       - name: Upload artifacts (macOS)
@@ -124,10 +118,6 @@ jobs:
           name: dist-mac
           path: |
             dist/PDFDecomposer-*.dmg
-            dist/PDFDecomposer-*.dmg.blockmap
-            dist/PDFDecomposer-*.zip
-            dist/PDFDecomposer-*.zip.blockmap
-            dist/latest-mac.yml
           if-no-files-found: error
 
       - name: Upload artifacts (Linux)
@@ -137,8 +127,6 @@ jobs:
           name: dist-linux
           path: |
             dist/PDFDecomposer-*.AppImage
-            dist/PDFDecomposer-*.AppImage.blockmap
-            dist/latest-linux.yml
           if-no-files-found: error
 
   release:
