@@ -27,17 +27,6 @@ export interface SplitProgressEvent {
   done?: boolean;
 }
 
-export interface UpdateInfo {
-  version: string;
-  releaseDate?: string;
-}
-
-export interface DownloadProgress {
-  percent: number;
-  transferred: number;
-  total: number;
-}
-
 export interface PdfInfo {
   pageCount: number;
   fileSizeBytes: number;

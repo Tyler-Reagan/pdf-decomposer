@@ -18,7 +18,6 @@ Built with Electron, React, and pdf-lib.
 Download the latest release from the [Releases](../../releases) page:
 
 - **PDFDecomposer-Setup-x.x.x.exe** — NSIS installer (installs to `%LOCALAPPDATA%`, no admin required)
-- **PDFDecomposer-portable.exe** — single executable, no installation needed
 
 ## Development
 
