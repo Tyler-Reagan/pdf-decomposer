@@ -1,6 +1,6 @@
 {
   "name": "pdf-decomposer",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "Split PDFs into multiple smaller PDFs by visual page selection",
   "main": "./out/main/index.js",
   "author": "PDF Decomposer",
