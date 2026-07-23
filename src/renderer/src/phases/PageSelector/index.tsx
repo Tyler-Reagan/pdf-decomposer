@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useShallow } from "zustand/shallow";
 import { usePdfStore } from "../../store/usePdfStore";
 import { PageNode } from "./PageNode";
@@ -292,19 +292,18 @@ export function PageSelector() {
     groups.length > 0 && groups.some((g) => g.pageIndices.length > 0);
 
   // Hooks must always run; bail out after they're declared.
-  const originalTotalPages = loadedPdf?.totalPages ?? 0;
   const totalPages = pages.length;
 
-  const dirty = useMemo(
-    () =>
-      pages.length !== originalTotalPages ||
-      pages.some((p) => p.rotation !== 0),
-    [pages, originalTotalPages],
-  );
+  // undoStack is pushed on every rotate/delete and cleared on load/commitSave,
+  // so its length already *is* "edits pending since the last save" — no need
+  // to separately compare page counts or scan rotations. A rotate immediately
+  // followed by its inverse will still read as dirty until saved/undone; that's
+  // intentional (fail toward "ask to save" rather than get stuck un-dirty).
+  const dirty = undoStack.length > 0;
   const canUndo = undoStack.length > 0;
   const canRedo = redoStack.length > 0;
   const rotatedCount = pages.filter((p) => p.rotation !== 0).length;
-  const deletedCount = originalTotalPages - pages.length;
+  const deletedCount = (loadedPdf?.totalPages ?? 0) - pages.length;
 
   const rotateSelection = useCallback(
     (direction: "cw" | "ccw") => {

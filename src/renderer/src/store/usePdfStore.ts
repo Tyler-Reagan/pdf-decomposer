@@ -243,6 +243,7 @@ export const usePdfStore = create<PdfStore>()(
           originalIndex: i,
           rotation: 0,
         }));
+        if (s.loadedPdf) s.loadedPdf.totalPages = s.pages.length;
         s.undoStack = [];
         s.redoStack = [];
         s.reloadToken += 1;

@@ -148,4 +148,26 @@ describe("usePdfStore pending page edits", () => {
     expect(s.redoStack).toHaveLength(0);
     expect(s.reloadToken).toBe(tokenBefore + 1);
   });
+
+  it("commitSave syncs loadedPdf.totalPages to the saved page count so dirty clears", () => {
+    loadThreePages();
+    const { deletePage, commitSave } = usePdfStore.getState();
+    deletePage("page-0"); // 2 pages remain
+
+    commitSave();
+
+    const s = usePdfStore.getState();
+    expect(s.loadedPdf?.totalPages).toBe(s.pages.length);
+  });
+
+  it("commitSave empties the undo stack after a delete, so a dirty flag derived from it clears", () => {
+    loadThreePages();
+    const { deletePage, commitSave } = usePdfStore.getState();
+    deletePage("page-0");
+    expect(usePdfStore.getState().undoStack.length).toBeGreaterThan(0);
+
+    commitSave();
+
+    expect(usePdfStore.getState().undoStack).toHaveLength(0);
+  });
 });

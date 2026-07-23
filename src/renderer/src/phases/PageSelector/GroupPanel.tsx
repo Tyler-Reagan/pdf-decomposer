@@ -21,7 +21,7 @@ export function GroupPanel() {
   const {
     groups,
     metaGroups,
-    loadedPdf,
+    pages,
     addGroup,
     removeGroup,
     updateGroup,
@@ -34,7 +34,7 @@ export function GroupPanel() {
     useShallow((s) => ({
       groups: s.groups,
       metaGroups: s.metaGroups,
-      loadedPdf: s.loadedPdf,
+      pages: s.pages,
       addGroup: s.addGroup,
       removeGroup: s.removeGroup,
       updateGroup: s.updateGroup,
@@ -46,9 +46,8 @@ export function GroupPanel() {
     })),
   );
 
-  const totalPages = loadedPdf?.totalPages ?? 0;
   const assignedPages = new Set(groups.flatMap((g) => g.pageIndices));
-  const unassignedCount = totalPages - assignedPages.size;
+  const unassignedCount = pages.length - assignedPages.size;
 
   const ungroupedGroups = groups.filter((g) => g.metaGroupId === null);
 
